@@ -1,0 +1,160 @@
+```html
+{% extends 'base.html' %}
+
+{% block title %}Notifications | CampusFind{% endblock %}
+
+{% block content %}
+<style>
+    .notifications-page {
+        max-width: 950px;
+        margin: 45px auto;
+        padding: 24px;
+        color: #f8fafc;
+    }
+
+    .notifications-page h1 {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+
+    .notifications-subtitle {
+        color: #cbd5e1;
+        margin-bottom: 28px;
+    }
+
+    .notification-card {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 20px;
+        margin-bottom: 14px;
+        background: #151326;
+        border: 1px solid #343047;
+        border-radius: 14px;
+    }
+
+    .notification-card.unread {
+        border-left: 4px solid #a78bfa;
+        background: #1b1630;
+    }
+
+    .notification-content {
+        min-width: 0;
+    }
+
+    .notification-content h2 {
+        font-size: 18px;
+        margin: 0 0 8px;
+        color: #ffffff;
+    }
+
+    .notification-content p {
+        margin: 0 0 10px;
+        line-height: 1.6;
+        color: #cbd5e1;
+        overflow-wrap: anywhere;
+    }
+
+    .notification-date {
+        font-size: 12px;
+        color: #a8a2bd;
+    }
+
+    .notification-actions {
+        flex-shrink: 0;
+    }
+
+    .notification-actions button {
+        background: #7c3aed;
+        color: white;
+        border: 0;
+        border-radius: 8px;
+        padding: 10px 12px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .notification-actions button:hover {
+        background: #6d28d9;
+    }
+
+    .read-label {
+        color: #86efac;
+        font-size: 13px;
+    }
+
+    .notifications-empty {
+        padding: 45px 20px;
+        text-align: center;
+        background: #151326;
+        border: 1px dashed #45415f;
+        border-radius: 14px;
+        color: #cbd5e1;
+    }
+
+    @media (max-width: 600px) {
+        .notifications-page {
+            margin: 20px auto;
+            padding: 16px;
+        }
+
+        .notification-card {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<section class="notifications-page">
+    <h1>Notifications</h1>
+
+    <p class="notifications-subtitle">
+        You have {{ unread_count }} unread notification{{ unread_count|pluralize }}.
+        Stay updated on your reports and claims.
+    </p>
+
+    {% for notification in notifications %}
+        <article class="notification-card
+            {% if not notification.is_read %}unread{% endif %}">
+
+            <div class="notification-content">
+                <h2>{{ notification.title }}</h2>
+
+                <p>{{ notification.message }}</p>
+
+                <span class="notification-date">
+                    {{ notification.created_at|date:"d M Y, h:i A" }}
+                </span>
+
+                {% if notification.report_id %}
+                    <p>
+                        <a href="{% url 'my_reports' %}"
+                           style="color:#c4b5fd;">
+                            View My Reports
+                        </a>
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="notification-actions">
+                {% if not notification.is_read %}
+                    <form method="post"
+                          action="{% url 'mark_notification_read' notification.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Mark as read</button>
+                    </form>
+                {% else %}
+                    <span class="read-label">✓ Read</span>
+                {% endif %}
+            </div>
+
+        </article>
+    {% empty %}
+        <div class="notifications-empty">
+            <h2>No notifications yet</h2>
+            <p>Updates about your reports and claims will appear here.</p>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}
+```

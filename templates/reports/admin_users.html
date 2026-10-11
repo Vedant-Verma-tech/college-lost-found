@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users | CampusFind{% endblock %}
+
+{% block content %}
+<section class="listing-page admin-management-page">
+    <div class="listing-header">
+        <div>
+            <small>CAMPUSFIND / ADMIN PORTAL</small>
+            <h1>User Management</h1>
+            <p>Manage campus accounts and access roles.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'admin_dashboard' %}">
+            Back to Dashboard
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="report-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="GET" class="admin-filter-form">
+        <input
+            type="search"
+            name="q"
+            placeholder="Search username, email or college ID"
+            value="{{ search }}"
+        >
+
+        <select name="role">
+            <option value="">All roles</option>
+            <option value="STUDENT"
+                {% if selected_role == 'STUDENT' %}selected{% endif %}>
+                Student
+            </option>
+            <option value="TEACHER"
+                {% if selected_role == 'TEACHER' %}selected{% endif %}>
+                Teacher
+            </option>
+            <option value="ADMIN"
+                {% if selected_role == 'ADMIN' %}selected{% endif %}>
+                Admin
+            </option>
+        </select>
+
+        <button type="submit" class="approve-btn">Search</button>
+        <a href="{% url 'admin_users' %}" class="admin-back-link">
+            Clear
+        </a>
+    </form>
+
+    <div class="admin-table-wrapper">
+        <table class="admin-reports-table">
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>College ID</th>
+                    <th>Role</th>
+                    <th>Account</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for person in users %}
+                <tr>
+                    <td>{{ person.username }}</td>
+                    <td>{{ person.email|default:"—" }}</td>
+                    <td>{{ person.college_id|default:"—" }}</td>
+
+                    <td>
+                        {% if person.is_superuser %}
+                            Superuser
+                        {% else %}
+                            <form method="POST"
+                                  action="{% url 'admin_update_user_role' person.pk %}">
+                                {% csrf_token %}
+                                <select name="role">
+                                    <option value="STUDENT"
+                                        {% if person.role == 'STUDENT' %}selected{% endif %}>
+                                        Student
+                                    </option>
+                                    <option value="TEACHER"
+                                        {% if person.role == 'TEACHER' %}selected{% endif %}>
+                                        Teacher
+                                    </option>
+                                    <option value="ADMIN"
+                                        {% if person.role == 'ADMIN' %}selected{% endif %}>
+                                        Admin
+                                    </option>
+                                </select>
+                                <button type="submit" class="approve-btn">
+                                    Save Role
+                                </button>
+                            </form>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if person.is_active %}
+                            <span class="status-verified">Active</span>
+                        {% else %}
+                            <span class="status-rejected">Inactive</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if not person.is_superuser and person.pk != request.user.pk %}
+                            <form method="POST"
+                                  action="{% url 'admin_toggle_user_active' person.pk %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="reject-btn">
+                                    {% if person.is_active %}
+                                        Deactivate
+                                    {% else %}
+                                        Activate
+                                    {% endif %}
+                                </button>
+                            </form>
+                        {% else %}
+                            <span>Protected</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

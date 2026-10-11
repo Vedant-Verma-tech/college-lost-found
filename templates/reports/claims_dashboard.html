@@ -1,0 +1,74 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="report-page">
+    <h1>Claim Review Dashboard</h1>
+    <p>Review student requests and record completed handovers.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="report-message">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <form method="get">
+        <label for="status">Filter by status</label>
+        <select name="status" id="status">
+            <option value="">All claims</option>
+            {% for value, label in statuses %}
+                <option value="{{ value }}"
+                    {% if selected_status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+        <button type="submit">Filter</button>
+        <a href="{% url 'claims_dashboard' %}">Clear</a>
+    </form>
+
+    {% for claim in claims %}
+        <article class="my-report-card">
+            <div class="my-report-info">
+                <h2>{{ claim.item.title }}</h2>
+
+                <p><strong>Claimant:</strong> {{ claim.claimant.username }}</p>
+                <p><strong>Item reported by:</strong> {{ claim.item.owner.username }}</p>
+                <p><strong>Location:</strong> {{ claim.item.location }}</p>
+                <p><strong>Explanation:</strong> {{ claim.explanation }}</p>
+                <p><strong>Claim status:</strong> {{ claim.get_status_display }}</p>
+
+                {% if claim.status == 'PENDING' %}
+                    <div class="review-actions">
+                        <form method="post" action="{% url 'review_claim' claim.id %}">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="approve">
+                                Approve Claim
+                            </button>
+                            <button type="submit" name="action" value="reject">
+                                Reject Claim
+                            </button>
+                        </form>
+                    </div>
+                {% elif claim.status == 'APPROVED' %}
+                    <p>
+                        <strong>Next step:</strong>
+                        Confirm the physical handover after the claimant's identity
+                        and ownership have been checked.
+                    </p>
+                    <form method="post"
+                          action="{% url 'confirm_item_return' claim.id %}"
+                          onsubmit="return confirm('Confirm that this item has actually been handed over?');">
+                        {% csrf_token %}
+                        <button type="submit">Confirm Item Returned</button>
+                    </form>
+                {% endif %}
+            </div>
+        </article>
+    {% empty %}
+        <p>No claims match this filter.</p>
+    {% endfor %}
+
+    <p><a href="{% url 'teacher_dashboard' %}">Back to teacher dashboard</a></p>
+</div>
+{% endblock %}

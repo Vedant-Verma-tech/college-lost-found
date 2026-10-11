@@ -1,0 +1,453 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Found Items | CampusFind{% endblock %}
+
+{% block content %}
+
+<style>
+    .found-page {
+        max-width: 1200px;
+        margin: 45px auto;
+        padding: 24px;
+        color: #f8fafc;
+    }
+
+    .found-header {
+        margin-bottom: 30px;
+    }
+
+    .found-header small {
+        color: #a78bfa;
+        font-size: 12px;
+        letter-spacing: 2px;
+        font-weight: 700;
+    }
+
+    .found-page h1 {
+        color: #ffffff;
+        font-size: clamp(30px, 4vw, 42px);
+        margin: 12px 0;
+    }
+
+    .found-subtitle {
+        color: #cbd5e1;
+        margin: 0;
+        line-height: 1.8;
+        font-size: 16px;
+    }
+
+    .found-count {
+        display: inline-block;
+        margin-top: 18px;
+        padding: 8px 14px;
+        background: #21183b;
+        color: #c4b5fd;
+        border: 1px solid #45356d;
+        border-radius: 30px;
+        font-size: 13px;
+    }
+
+    .found-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+    }
+
+    .found-card {
+        min-width: 0;
+        overflow: hidden;
+        background: linear-gradient(145deg, #171527, #100e1d);
+        border: 1px solid #343047;
+        border-radius: 18px;
+        padding: 22px;
+        color: #f1f5f9;
+        transition: border-color .2s, transform .2s;
+    }
+
+    .found-card:hover {
+        border-color: #8b5cf6;
+        transform: translateY(-3px);
+    }
+
+    .found-card h2 {
+        color: #ffffff;
+        font-size: 23px;
+        margin: 12px 0 18px;
+        overflow-wrap: anywhere;
+    }
+
+    .found-card p {
+        color: #cbd5e1;
+        line-height: 1.7;
+        margin: 9px 0;
+        overflow-wrap: anywhere;
+    }
+
+    .found-card strong {
+        color: #e9d5ff;
+    }
+
+    .found-card .item-description {
+        color: #e2e8f0;
+        margin-top: 15px;
+    }
+
+    .found-tags {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .found-tag {
+        display: inline-flex;
+        padding: 6px 11px;
+        border-radius: 30px;
+        background: #29213f;
+        color: #d8b4fe;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .found-status {
+        display: inline-flex;
+        padding: 6px 11px;
+        border-radius: 30px;
+        background: #123b2b;
+        color: #86efac;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .found-status.returned {
+        background: #173451;
+        color: #93c5fd;
+    }
+
+    .found-card img {
+        display: block;
+        width: 100%;
+        height: 230px;
+        object-fit: contain;
+        background: #0b0a16;
+        border: 1px solid #343047;
+        border-radius: 12px;
+        margin: 18px 0;
+    }
+
+    .found-no-image {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 150px;
+        margin: 18px 0;
+        border: 1px dashed #45415f;
+        border-radius: 12px;
+        background: #100e1d;
+        color: #aaa7bb;
+        gap: 8px;
+    }
+
+    .found-no-image span {
+        color: #a78bfa;
+        font-size: 30px;
+    }
+
+    .claim-form {
+        border-top: 1px solid #343047;
+        margin-top: 22px;
+        padding-top: 20px;
+    }
+
+    .claim-form label {
+        display: block;
+        color: #ffffff;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .claim-form textarea {
+        display: block;
+        width: 100%;
+        min-height: 115px;
+        padding: 13px;
+        margin: 14px 0;
+        box-sizing: border-box;
+        background: #0b0a16;
+        color: #ffffff;
+        border: 1px solid #62558a;
+        border-radius: 10px;
+        font: inherit;
+        resize: vertical;
+    }
+
+    .claim-form textarea:focus {
+        outline: 2px solid #8b5cf6;
+        border-color: transparent;
+    }
+
+    .claim-form textarea::placeholder {
+        color: #a8a2bd;
+    }
+
+    .claim-btn {
+        display: inline-block;
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 12px 18px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity .2s;
+    }
+
+    .claim-btn:hover {
+        opacity: .85;
+    }
+
+    .claim-note {
+        margin-top: 18px !important;
+        padding: 12px;
+        border-radius: 9px;
+        background: #21183b;
+        color: #c4b5fd !important;
+    }
+
+    .found-message {
+        color: #ffffff;
+        background: #27213e;
+        border: 1px solid #45356d;
+        border-radius: 10px;
+        padding: 13px 16px;
+        margin-bottom: 18px;
+    }
+
+    .found-empty {
+        grid-column: 1 / -1;
+        padding: 55px 24px;
+        text-align: center;
+        background: #151326;
+        border: 1px dashed #45415f;
+        border-radius: 18px;
+    }
+
+    .found-empty .empty-icon {
+        font-size: 42px;
+        color: #a78bfa;
+        margin-bottom: 12px;
+    }
+
+    .found-empty h2 {
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .found-empty p {
+        color: #cbd5e1;
+        margin-bottom: 22px;
+    }
+
+    .found-home-btn {
+        display: inline-block;
+        text-decoration: none;
+        background: #7c3aed;
+        color: #ffffff;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-weight: 700;
+    }
+
+    .found-home-btn:hover {
+        background: #6d28d9;
+    }
+
+    @media (max-width: 800px) {
+        .found-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .found-page {
+            margin: 24px auto;
+            padding: 16px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .found-card {
+            padding: 16px;
+        }
+
+        .found-card img {
+            height: 190px;
+        }
+
+        .claim-btn {
+            width: 100%;
+        }
+    }
+</style>
+
+<section class="found-page">
+
+    <header class="found-header">
+        <small>CAMPUSFIND / CAMPUS DISCOVERY</small>
+        <h1>Found Items</h1>
+        <p class="found-subtitle">
+            Browse items found on campus. Recognize something that belongs
+            to you? Submit a claim request for staff review.
+        </p>
+
+        <span class="found-count">
+            {{ items|length }} item{{ items|length|pluralize }}
+        </span>
+    </header>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="found-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="found-grid">
+
+        {% for item in items %}
+
+            <article class="found-card">
+
+                <div class="found-tags">
+                    <span class="found-tag">
+                        {{ item.get_category_display|default:item.category }}
+                    </span>
+
+                    {% if item.status == 'RETURNED' %}
+                        <span class="found-status returned">
+                            Returned
+                        </span>
+                    {% else %}
+                        <span class="found-status">
+                            Verified
+                        </span>
+                    {% endif %}
+                </div>
+
+                <h2>{{ item.title }}</h2>
+
+                <p>
+                    <strong>Location:</strong>
+                    {{ item.location|default:"Not specified" }}
+                </p>
+
+                <p>
+                    <strong>Date found:</strong>
+                    {% if item.date_occurred %}
+                        {{ item.date_occurred|date:"d M Y" }}
+                    {% else %}
+                        Not specified
+                    {% endif %}
+                </p>
+
+                {% if item.description %}
+                    <p class="item-description">
+                        <strong>Description:</strong>
+                        {{ item.description }}
+                    </p>
+                {% endif %}
+
+                {% if item.image %}
+                    <a href="{{ item.image.url }}"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        <img src="{{ item.image.url }}"
+                             alt="{{ item.title }}"
+                             loading="lazy">
+                    </a>
+                {% else %}
+                    <div class="found-no-image">
+                        <span>✦</span>
+                        <p>No image uploaded</p>
+                    </div>
+                {% endif %}
+
+                {% if item.status == 'RETURNED' %}
+
+                    <p class="claim-note">
+                        This item has already been marked as returned.
+                        New claim requests are closed.
+                    </p>
+
+                {% elif user.is_authenticated %}
+
+                    {% if item.owner_id != user.id %}
+
+                        <div class="claim-form">
+                            <form method="post"
+                                  action="{% url 'submit_claim' item.id %}">
+                                {% csrf_token %}
+
+                                <label for="claim-{{ item.id }}">
+                                    Request to claim this item
+                                </label>
+
+                                <p>
+                                    Describe identifying details that help
+                                    staff verify that this item belongs to you.
+                                </p>
+
+                                <textarea
+                                    id="claim-{{ item.id }}"
+                                    name="explanation"
+                                    minlength="20"
+                                    maxlength="2000"
+                                    placeholder="Explain how you can identify this item..."
+                                    required
+                                ></textarea>
+
+                                <button type="submit" class="claim-btn">
+                                    Submit Claim Request →
+                                </button>
+                            </form>
+                        </div>
+
+                    {% else %}
+
+                        <p class="claim-note">
+                            You reported this item, so you cannot claim it yourself.
+                        </p>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <p class="claim-note">
+                        <a href="{% url 'login' %}" style="color:#c4b5fd;">
+                            Log in
+                        </a>
+                        to request a claim for this item.
+                    </p>
+
+                {% endif %}
+
+            </article>
+
+        {% empty %}
+
+            <div class="found-empty">
+                <div class="empty-icon">✦</div>
+                <h2>No verified found items yet</h2>
+                <p>
+                    Found items will appear here after staff verification.
+                    Please check again later.
+                </p>
+                <a href="/" class="found-home-btn">Back Home →</a>
+            </div>
+
+        {% endfor %}
+
+    </div>
+</section>
+
+{% endblock %}

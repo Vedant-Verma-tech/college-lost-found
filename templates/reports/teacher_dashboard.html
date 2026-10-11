@@ -1,0 +1,168 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard | CampusFind{% endblock %}
+
+{% block content %}
+<section class="listing-page teacher-page">
+
+    <!-- Dashboard Header -->
+    <div class="listing-header">
+        <div>
+            <small>CAMPUSFIND / STAFF PORTAL</small>
+            <h1>Report Verification</h1>
+            <p>Review submissions before they become visible to students.</p>
+        </div>
+
+        <span class="report-status">
+            {{ items|length }} pending
+        </span>
+    </div>
+
+    <!-- Review Item Claims Link -->
+    <div class="teacher-dashboard-links">
+        <a href="{% url 'claims_dashboard' %}"
+           class="claims-dashboard-link">
+            Review Item Claims →
+        </a>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="report-message">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Pending Reports -->
+    <div class="teacher-report-list">
+
+        {% for item in items %}
+            <article class="my-report-card teacher-report-card">
+
+                <!-- Item Image -->
+                <div class="teacher-image-container">
+                    {% if item.image %}
+                        <a href="{{ item.image.url }}" target="_blank" rel="noopener noreferrer">
+                            <img
+                                src="{{ item.image.url }}"
+                                alt="{{ item.title }}"
+                                class="teacher-item-image"
+                                loading="lazy"
+                            >
+                        </a>
+                    {% else %}
+                        <div class="teacher-no-image">
+                            <span>✦</span>
+                            <p>No image uploaded</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Report Details -->
+                <div class="my-report-info">
+
+                    <span class="report-type-tag">
+                        {{ item.get_report_type_display }}
+                    </span>
+
+                    <h2>{{ item.title }}</h2>
+
+                    <p>
+                        <strong>Category:</strong>
+                        {{ item.get_category_display }}
+                    </p>
+
+                    <p>
+                        <strong>Description:</strong>
+                        {{ item.description }}
+                    </p>
+
+                    <p>
+                        <strong>Location:</strong>
+                        {{ item.location }}
+                    </p>
+
+                    <p>
+                        <strong>Date occurred:</strong>
+                        {{ item.date_occurred|date:"d M Y" }}
+                    </p>
+
+                    <p>
+                        <strong>Submitted by:</strong>
+                        {{ item.owner.username }}
+                    </p>
+
+                    <p>
+                        <strong>Status:</strong>
+                        {{ item.get_status_display }}
+                    </p>
+
+                    <!-- Approve / Reject Actions -->
+                    {% if item.owner_id == request.user.id %}
+
+                        <p class="field-error">
+                            You cannot review your own report.
+                        </p>
+
+                    {% else %}
+
+                        <div class="review-actions">
+
+                            <!-- Approve Report -->
+                            <form
+                                method="POST"
+                                action="{% url 'review_report' item.pk %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    name="action"
+                                    value="approve"
+                                    class="approve-btn"
+                                >
+                                    Approve
+                                </button>
+                            </form>
+
+                            <!-- Reject Report -->
+                            <form
+                                method="POST"
+                                action="{% url 'review_report' item.pk %}"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    name="action"
+                                    value="reject"
+                                    class="reject-btn"
+                                >
+                                    Reject
+                                </button>
+                            </form>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+            </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+                <h2>All caught up!</h2>
+                <p>There are no pending reports to review.</p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+{% endblock %}
+

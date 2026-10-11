@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+
+Create Account — CampusFind
+
+{% endblock %}
+
+
+{% block content %}
+
+<section class="auth-page">
+
+    <div class="auth-card register-card">
+
+        <div class="auth-logo">
+
+            ✦ CampusFind
+
+        </div>
+
+
+        <h1>
+            Join CampusFind.
+        </h1>
+
+
+        <p class="auth-subtitle">
+
+            Create your student account.
+
+        </p>
+
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="message">
+
+                    {{ message }}
+
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+
+        <form method="POST">
+
+            {% csrf_token %}
+
+
+            <label>
+                Username
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                required
+            >
+
+
+            <label>
+                College ID
+            </label>
+
+            <input
+                type="text"
+                name="college_id"
+                placeholder="Example: CSE2026001"
+                required
+            >
+
+
+            <label>
+                Email
+            </label>
+
+            <input
+                type="email"
+                name="email"
+                required
+            >
+
+
+            <label>
+                Department
+            </label>
+
+            <input
+                type="text"
+                name="department"
+                placeholder="Computer Science"
+            >
+
+
+            <label>
+                Phone
+            </label>
+
+            <input
+                type="tel"
+                name="phone"
+            >
+
+
+            <label>
+                Password
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                required
+            >
+
+
+            <label>
+                Confirm Password
+            </label>
+
+            <input
+                type="password"
+                name="confirm_password"
+                required
+            >
+
+
+            <button
+                type="submit"
+                class="primary-btn auth-btn"
+            >
+
+                Create Account →
+
+            </button>
+
+        </form>
+
+
+        <p class="auth-footer">
+
+            Already have an account?
+
+            <a href="/login/">
+                Login
+            </a>
+
+        </p>
+
+    </div>
+
+</section>
+
+{% endblock %}

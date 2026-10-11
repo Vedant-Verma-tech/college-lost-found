@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Reports | CampusFind{% endblock %}
+
+{% block content %}
+<section class="listing-page admin-management-page">
+    <div class="listing-header">
+        <div>
+            <small>CAMPUSFIND / ADMIN PORTAL</small>
+            <h1>Report Management</h1>
+            <p>Review and manage all lost and found submissions.</p>
+        </div>
+        <a class="admin-back-link" href="{% url 'admin_dashboard' %}">
+            Back to Dashboard
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="report-message">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="GET" class="admin-filter-form">
+        <input
+            type="search"
+            name="q"
+            placeholder="Search item, location or username"
+            value="{{ search }}"
+        >
+
+        <select name="type">
+            <option value="">Lost and Found</option>
+            {% for value, label in report_types %}
+                <option value="{{ value }}"
+                    {% if selected_type == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <select name="status">
+            <option value="">All statuses</option>
+            {% for value, label in statuses %}
+                <option value="{{ value }}"
+                    {% if selected_status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="approve-btn">Filter</button>
+        <a href="{% url 'admin_reports' %}" class="admin-back-link">
+            Clear
+        </a>
+    </form>
+
+    <div class="admin-table-wrapper">
+        <table class="admin-reports-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Submitted By</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Update Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>
+                        <strong>{{ item.title }}</strong>
+                        {% if item.image %}
+                            <br>
+                            <a href="{{ item.image.url }}" target="_blank"
+                               rel="noopener noreferrer">View image</a>
+                        {% endif %}
+                    </td>
+                    <td>{{ item.get_report_type_display }}</td>
+                    <td>{{ item.location }}</td>
+                    <td>{{ item.owner.username }}</td>
+                    <td>{{ item.date_occurred|date:"d M Y" }}</td>
+                    <td>{{ item.get_status_display }}</td>
+                    <td>
+                        <form method="POST"
+                              action="{% url 'admin_update_report_status' item.pk %}">
+                            {% csrf_token %}
+                            <select name="status">
+                                {% for value, label in statuses %}
+                                    <option value="{{ value }}"
+                                        {% if item.status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="approve-btn">
+                                Update
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">No reports match your filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

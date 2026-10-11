@@ -1,0 +1,41 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="report-page">
+    <h1>My Claims</h1>
+    <p>Track your requests for found items.</p>
+
+    {% if messages %}
+        {% for message in messages %}
+            <p class="report-message">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    {% for claim in claims %}
+        <article class="my-report-card">
+            <div class="my-report-info">
+                <h2>{{ claim.item.title }}</h2>
+
+                <p><strong>Location:</strong> {{ claim.item.location }}</p>
+                <p><strong>Claim submitted:</strong> {{ claim.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Your explanation:</strong> {{ claim.explanation }}</p>
+                <p>
+                    <strong>Claim status:</strong>
+                    <span class="status-{{ claim.status|lower }}">
+                        {{ claim.get_status_display }}
+                    </span>
+                </p>
+                <p>
+                    <strong>Item status:</strong>
+                    {{ claim.item.get_status_display }}
+                </p>
+            </div>
+        </article>
+    {% empty %}
+        <p>You haven't submitted any claims yet.</p>
+    {% endfor %}
+
+    <p><a href="{% url 'found_items' %}">Browse found items</a></p>
+</div>
+{% endblock %}

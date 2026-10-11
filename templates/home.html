@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+
+CampusFind — College Lost & Found
+
+{% endblock %}
+
+
+{% block content %}
+
+<section class="hero">
+
+    <div class="hero-content">
+
+        <div class="badge">
+
+            ✦ COLLEGE LOST & FOUND
+
+        </div>
+
+
+        <h1>
+
+            Lost something?
+
+            <br>
+
+            <span>
+                Let's find it.
+            </span>
+
+        </h1>
+
+
+        <p>
+
+            CampusFind helps students and teachers
+            report, discover and recover lost belongings
+            across campus.
+
+        </p>
+
+
+        <div class="hero-actions">
+
+            <a
+                href="/report/lost/"
+                class="primary-btn"
+            >
+                Report Lost ↗
+            </a>
+
+
+            <a
+                href="/report/found/"
+                class="secondary-btn"
+            >
+                Report Found
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="hero-visual">
+
+        <div class="dashboard-card">
+
+            <div class="card-top">
+
+                <span>
+                    ● Recently Found
+                </span>
+
+                <small>
+                    Campus
+                </small>
+
+            </div>
+
+
+            <h2>
+                Black Backpack
+            </h2>
+
+
+            <p>
+                Found near Central Library
+            </p>
+
+
+            <div class="location">
+
+                📍 Central Library
+
+            </div>
+
+
+            <div class="card-button">
+
+                View details →
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="stats">
+
+    <div>
+
+        <strong>
+            {{ lost_count }}
+        </strong>
+
+        <span>
+            Lost Reports
+        </span>
+
+    </div>
+
+
+    <div>
+
+        <strong>
+            {{ found_count }}
+        </strong>
+
+        <span>
+            Found Items
+        </span>
+
+    </div>
+
+
+    <div>
+
+        <strong>
+            {{ returned_count }}
+        </strong>
+
+        <span>
+            Items Returned
+        </span>
+
+    </div>
+
+</section>
+
+
+<section class="items-section">
+
+    <div class="section-heading">
+
+        <div>
+
+            <small>
+                RECENT REPORTS
+            </small>
+
+            <h2>
+
+                Help something
+
+                <span>
+                    find its owner.
+                </span>
+
+            </h2>
+
+        </div>
+
+
+        <a href="/lost/">
+            View all →
+        </a>
+
+    </div>
+
+
+    <div class="items-grid">
+
+        {% for item in recent_items %}
+
+        <article class="item-card">
+
+            {% if item.image %}
+
+                <img
+                    src="{{ item.image.url }}"
+                    alt="{{ item.title }}"
+                >
+
+            {% else %}
+
+                <div class="no-image">
+                    No Image
+                </div>
+
+            {% endif %}
+
+
+            <div class="item-content">
+
+                <small>
+                    {{ item.report_type }}
+                </small>
+
+
+                <h3>
+                    {{ item.title }}
+                </h3>
+
+
+                <p>
+                    📍 {{ item.location }}
+                </p>
+
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <p class="empty">
+            No reports yet.
+        </p>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

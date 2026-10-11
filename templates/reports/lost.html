@@ -1,0 +1,111 @@
+
+{% extends 'base.html' %}
+
+{% block title %}
+Lost Items — CampusFind
+{% endblock %}
+
+{% block content %}
+
+<section class="listing-page">
+
+    <div class="listing-header">
+        <div>
+            <small>CAMPUSFIND</small>
+
+            <h1>Lost Items</h1>
+
+            <p>
+                Help students find belongings
+                reported missing around campus.
+            </p>
+        </div>
+
+        {% if user.is_authenticated %}
+            <a href="/report/lost/" class="primary-btn">
+                Report Lost Item ↗
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="items-grid">
+
+        {% for item in items %}
+
+            <article class="item-card">
+
+                <!-- Item Image -->
+                <div class="item-image-container">
+                    {% if item.image %}
+                        <a href="{{ item.image.url }}" target="_blank">
+                            <img
+                                src="{{ item.image.url }}"
+                                alt="{{ item.title }}"
+                                class="lost-found-image"
+                                loading="lazy"
+                            >
+                        </a>
+                    {% else %}
+                        <div class="no-image">
+                            <span>🔎</span>
+                            <p>No image uploaded</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Item Details -->
+                <div class="item-content">
+
+                    <small>
+                        {{ item.get_category_display }}
+                    </small>
+
+                    <h3>{{ item.title }}</h3>
+
+                    <p>
+                        📍 {{ item.location }}
+                    </p>
+
+                    <p>
+                        📅 {{ item.date_occurred|date:"d M Y" }}
+                    </p>
+
+                    {% if item.description %}
+                        <p class="item-description">
+                            {{ item.description|truncatewords:20 }}
+                        </p>
+                    {% endif %}
+
+                    <span class="report-status status-{{ item.status|lower }}">
+                        {{ item.get_status_display }}
+                    </span>
+
+                </div>
+
+            </article>
+
+        {% empty %}
+
+            <div class="empty-state">
+                <div>🔎</div>
+
+                <h2>No lost items yet.</h2>
+
+                <p>
+                    Be the first to report a lost item.
+                </p>
+
+                {% if user.is_authenticated %}
+                    <a href="/report/lost/" class="primary-btn">
+                        Report Lost Item →
+                    </a>
+                {% endif %}
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,230 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | CampusFind{% endblock %}
+
+{% block content %}
+
+<section class="report-page">
+    <div class="report-card">
+
+        <a href="/" class="back-link">← Back to CampusFind</a>
+
+        <span class="report-eyebrow">
+            CAMPUSFIND / NEW REPORT
+        </span>
+
+        <h1>{{ page_title }}</h1>
+
+        <p class="report-intro">
+            Help reunite lost belongings with their owners
+            by sharing accurate information.
+        </p>
+
+        <div class="status-note">
+            Your report will remain pending verification
+            until an authorized staff member reviews it.
+        </div>
+
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            {% for field in form %}
+                <div class="form-group">
+
+                    <label for="{{ field.id_for_label }}">
+                        {{ field.label }}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <small>{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <p class="field-error">{{ error }}</p>
+                    {% endfor %}
+
+                    {% if field.name == "image" %}
+                        <div class="image-preview-container">
+
+                            <p class="preview-label">
+                                Image Preview
+                            </p>
+
+                            <img
+                                id="image-preview"
+                                src=""
+                                alt="Selected item image preview"
+                                hidden
+                            >
+
+                            <div
+                                id="no-image-preview"
+                                class="no-image"
+                            >
+                                <span>🖼️</span>
+                                <p>Select an image to see its preview.</p>
+                            </div>
+
+                        </div>
+                    {% endif %}
+
+                </div>
+            {% endfor %}
+
+            <button
+                type="submit"
+                class="primary-btn report-submit"
+            >
+                {{ button_text }} →
+            </button>
+
+        </form>
+
+    </div>
+</section>
+
+<style>
+
+.image-preview-container {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 12px;
+    overflow: hidden;
+}
+
+.image-preview-container .preview-label {
+    margin-bottom: 10px;
+    color: #e4e0ef;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#image-preview {
+    display: block;
+    width: 300px;
+    max-width: 100%;
+    height: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    box-sizing: border-box;
+    background: #171726;
+    border: 1px solid #343044;
+    border-radius: 10px;
+    margin: 0;
+}
+
+#image-preview[hidden] {
+    display: none !important;
+}
+
+#no-image-preview {
+    width: 300px;
+    max-width: 100%;
+    min-height: 100px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px;
+    text-align: center;
+    color: #aaa7bb;
+    background: #171726;
+    border: 1px dashed #45415f;
+    border-radius: 10px;
+    margin: 0;
+}
+
+#no-image-preview span {
+    font-size: 26px;
+}
+
+#no-image-preview p {
+    margin: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+    #image-preview,
+    #no-image-preview {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const imageInput = document.querySelector(
+        'input[name="image"]'
+    );
+
+    const imagePreview = document.getElementById(
+        "image-preview"
+    );
+
+    const noImagePreview = document.getElementById(
+        "no-image-preview"
+    );
+
+    if (!imageInput || !imagePreview || !noImagePreview) {
+        return;
+    }
+
+    imageInput.addEventListener("change", function () {
+        const file = this.files && this.files[0];
+
+        if (!file) {
+            imagePreview.removeAttribute("src");
+            imagePreview.hidden = true;
+            noImagePreview.style.display = "flex";
+            noImagePreview.querySelector("p").textContent =
+                "Select an image to see its preview.";
+            return;
+        }
+
+        if (!file.type.startsWith("image/")) {
+            imageInput.value = "";
+            imagePreview.removeAttribute("src");
+            imagePreview.hidden = true;
+            noImagePreview.style.display = "flex";
+            noImagePreview.querySelector("p").textContent =
+                "Please select a valid image file.";
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            imagePreview.onload = function () {
+                imagePreview.hidden = false;
+                noImagePreview.style.display = "none";
+            };
+
+            imagePreview.src = event.target.result;
+        };
+
+        reader.onerror = function () {
+            imagePreview.removeAttribute("src");
+            imagePreview.hidden = true;
+            noImagePreview.style.display = "flex";
+            noImagePreview.querySelector("p").textContent =
+                "Unable to preview this image. Please try another.";
+        };
+
+        reader.readAsDataURL(file);
+    });
+});
+</script>
+
+{% endblock %}

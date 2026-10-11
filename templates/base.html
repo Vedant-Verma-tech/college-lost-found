@@ -1,0 +1,175 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        CampusFind
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/style.css' %}"
+    >
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+
+        <a href="/" class="logo">
+            <span>✦</span>
+            CampusFind
+        </a>
+
+        <nav>
+
+            <a href="/">Home</a>
+
+            <a href="/lost/">Lost</a>
+
+            <a href="/found/">Found</a>
+
+            {% if user.is_authenticated %}
+
+                {% if user.role == 'STUDENT' %}
+
+                    <a href="/report/lost/">
+                        Report Lost
+                    </a>
+
+                    <a href="/report/found/">
+                        Report Found
+                    </a>
+
+                    <a href="{% url 'my_reports' %}">
+                        My Reports
+                    </a>
+
+                    <a href="{% url 'my_claims' %}">
+                        My Claims
+                    </a>
+
+                {% endif %}
+
+                {% if user.role == 'TEACHER' or user.role == 'ADMIN' or user.is_superuser %}
+
+                    <a href="{% url 'teacher_dashboard' %}">
+                        Report Verification
+                    </a>
+
+                    <a href="{% url 'claims_dashboard' %}">
+                        Review Claims
+                    </a>
+
+                {% endif %}
+
+                {% if user.role == 'ADMIN' or user.is_superuser %}
+
+                    <a href="{% url 'admin_dashboard' %}">
+                        Admin Dashboard
+                    </a>
+
+                {% endif %}
+
+                <!-- NOTIFICATIONS -->
+                <a href="{% url 'notifications' %}" class="notification-link">
+                    Notifications
+
+                    {% if unread_notification_count %}
+                        <span class="notification-badge">
+                            {{ unread_notification_count }}
+                        </span>
+                    {% endif %}
+                </a>
+
+            {% else %}
+
+                <a href="/report/lost/">
+                    Report Lost
+                </a>
+
+                <a href="/report/found/">
+                    Report Found
+                </a>
+
+            {% endif %}
+
+        </nav>
+
+        <!-- LOGIN / LOGOUT -->
+        <div class="nav-buttons">
+
+            {% if user.is_authenticated %}
+
+                <span class="user-name">
+                    Hi, {{ user.username }}
+                </span>
+
+                <a href="/logout/" class="signup">
+                    Logout
+                </a>
+
+            {% else %}
+
+                <a href="/login/" class="login">
+                    Login
+                </a>
+
+                <a href="/register/" class="signup">
+                    Sign Up ↗
+                </a>
+
+            {% endif %}
+
+        </div>
+
+    </header>
+
+    <!-- DJANGO MESSAGES -->
+    {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- PAGE CONTENT -->
+    <main>
+
+        {% block content %}
+        {% endblock %}
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+
+        <h3>
+            ✦ CampusFind
+        </h3>
+
+        <p>
+            Reuniting our campus with what matters.
+        </p>
+
+    </footer>
+
+</body>
+
+</html>
