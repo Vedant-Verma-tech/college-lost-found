@@ -36,3 +36,8 @@ desktop.ini
 htmlcov/
 .pytest_cache/
 
+test-image.jpg
+
+campusfind_backup.json
+
+image.jpg
