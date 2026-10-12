@@ -21,39 +21,41 @@
         aria-controls="main-navigation"
     >☰ Menu</button>
 
-    <nav id="main-navigation">
-        <a href="/">Home</a>
-        <a href="{% url 'lost_items' %}">Lost Items</a>
-        <a href="{% url 'found_items' %}">Found Items</a>
+    ```html
+<nav id="main-navigation">
+    <a href="/">Home</a>
+    <a href="{% url 'lost_items' %}">Lost Items</a>
+    <a href="{% url 'found_items' %}">Found Items</a>
 
-        {% if user.is_authenticated %}
-            {% if user.role == 'student' or user.role == 'teacher' %}
-                <a href="{% url 'report_lost' %}">Report Lost</a>
-                <a href="{% url 'report_found' %}">Report Found</a>
-                <a href="{% url 'my_reports' %}">My Reports</a>
-                <a href="{% url 'my_claims' %}">My Claims</a>
-            {% endif %}
-
-            {% if user.role == 'teacher' %}
-                <a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a>
-            {% endif %}
-
-            {% if user.role == 'admin' %}
-                <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
-            {% endif %}
-
-            {% if user.role == 'admin' or user.role == 'teacher' %}
-                <a href="{% url 'claims_dashboard' %}">Claims Dashboard</a>
-            {% endif %}
-
-            <a href="{% url 'notifications' %}">
-                Notifications
-                {% if notification_count %}
-                    <span class="notification-badge">{{ notification_count }}</span>
-                {% endif %}
-            </a>
+    {% if user.is_authenticated %}
+        {% if user.role == 'student' or user.role == 'teacher' %}
+            <a href="{% url 'report_lost' %}">Report Lost</a>
+            <a href="{% url 'report_found' %}">Report Found</a>
+            <a href="{% url 'my_reports' %}">My Reports</a>
+            <a href="{% url 'my_claims' %}">My Claims</a>
         {% endif %}
-    </nav>
+
+        {% if user.role == 'teacher' %}
+            <a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a>
+        {% endif %}
+
+        {% if user.role == 'admin' %}
+            <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+        {% endif %}
+
+        {% if user.role == 'admin' or user.role == 'teacher' %}
+            <a href="{% url 'claims_dashboard' %}">Claims Dashboard</a>
+        {% endif %}
+
+        <a href="{% url 'notifications' %}">
+            Notifications
+            {% if notification_count %}
+                <span class="notification-badge">{{ notification_count }}</span>
+            {% endif %}
+        </a>
+    {% endif %}
+</nav>
+```
 
     <div class="nav-buttons">
         {% if user.is_authenticated %}
