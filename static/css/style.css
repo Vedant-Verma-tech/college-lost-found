@@ -2181,3 +2181,160 @@ overflow: hidden;
     font-size: 11px;
     font-weight: 700;
 }
+
+
+
+/* =====================================
+   CampusFind - Responsive Design
+   ===================================== */
+
+/* Prevent padding from increasing element width */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+img,
+video,
+iframe,
+svg {
+    max-width: 100%;
+}
+
+img,
+video {
+    height: auto;
+}
+
+/* Forms and controls */
+input,
+select,
+textarea,
+button {
+    max-width: 100%;
+    font: inherit;
+}
+
+input,
+select,
+textarea {
+    min-width: 0;
+}
+
+button,
+input[type="submit"] {
+    cursor: pointer;
+}
+
+/* Flexible common layouts */
+.container,
+.main-container,
+.content,
+.page-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.card,
+.report-card,
+.form-container,
+.dashboard-card {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Tables: allow horizontal scrolling instead of
+   forcing the entire page wider than the screen */
+.table-responsive,
+.table-wrapper,
+.admin-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    /* Reduce spacing on tablets and phones */
+    .container,
+    .main-container,
+    .content,
+    .page-container {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    h1 {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+    }
+
+    h2 {
+        font-size: clamp(1.25rem, 5vw, 1.6rem);
+    }
+
+    /* Stack common horizontal layouts */
+    .row,
+    .form-row {
+        flex-wrap: wrap;
+    }
+
+    /* Make common form controls fit */
+    form input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+    form select,
+    form textarea {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Allow action buttons to wrap */
+    .actions,
+    .button-group,
+    .admin-filter-form {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Keep long tables inside their wrappers */
+    .admin-reports-table {
+        min-width: 600px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container,
+    .main-container,
+    .content,
+    .page-container {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    button,
+    input[type="submit"] {
+        min-height: 42px;
+    }
+
+    textarea {
+        resize: vertical;
+    }
+}
