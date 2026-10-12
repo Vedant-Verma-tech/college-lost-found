@@ -2338,3 +2338,122 @@ table {
         resize: vertical;
     }
 }
+
+/* Responsive navigation */
+.mobile-menu-toggle {
+    display: none;
+    padding: 10px 14px;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+@media (max-width: 800px) {
+    .navbar {
+        height: auto;
+        min-height: 72px;
+        padding: 14px 5%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
+
+    .mobile-menu-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .navbar nav {
+        display: none;
+        order: 3;
+        flex: 0 0 100%;
+        width: 100%;
+        flex-direction: column;
+        gap: 0;
+        padding-top: 10px;
+    }
+
+    .navbar nav.mobile-menu-open {
+        display: flex;
+    }
+
+    .navbar nav a {
+        display: block;
+        padding: 12px 4px;
+        border-top: 1px solid var(--border);
+    }
+
+    .nav-buttons {
+        margin-left: auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+
+    .user-name {
+        overflow-wrap: anywhere;
+    }
+
+    .hero h1 {
+        font-size: clamp(38px, 9vw, 55px);
+        letter-spacing: -2px;
+    }
+
+    .hero-actions {
+        flex-wrap: wrap;
+    }
+
+    .dashboard-card {
+        width: 100%;
+        max-width: 370px;
+        transform: none;
+    }
+
+    .stats div {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .stats div:last-child {
+        border-bottom: 0;
+    }
+
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo {
+        font-size: 18px;
+    }
+
+    .navbar .signup,
+    .navbar .login {
+        padding: 9px 11px;
+        font-size: 13px;
+    }
+
+    .hero {
+        padding: 48px 5%;
+    }
+
+    .dashboard-card {
+        padding: 22px;
+    }
+
+    .dashboard-card h2 {
+        margin-top: 35px;
+        font-size: 25px;
+    }
+
+    .auth-card,
+    .report-card {
+        padding: 24px 16px;
+    }
+}

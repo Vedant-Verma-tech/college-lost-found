@@ -1,135 +1,111 @@
 
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>{% block title %}CampusFind{% endblock %}</title>
 
-    <title>
-        {% block title %}
-        CampusFind
-        {% endblock %}
-    </title>
-
-    <link
-        rel="stylesheet"
-        href="{% static 'css/style.css' %}"
-    >
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
+    <!-- Navigation Bar -->
     <header class="navbar">
 
         <a href="/" class="logo">
-            <span>✦</span>
-            CampusFind
+            <span>✦</span> CampusFind
         </a>
 
-        <nav>
+        <!-- Mobile Menu Button -->
+        <button
+            class="mobile-menu-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="main-navigation"
+        >
+            ☰ Menu
+        </button>
+
+        <!-- Main Navigation -->
+        <nav id="main-navigation">
 
             <a href="/">Home</a>
-
-            <a href="/lost/">Lost</a>
-
-            <a href="/found/">Found</a>
+            <a href="{% url 'lost_items' %}">Lost Items</a>
+            <a href="{% url 'found_items' %}">Found Items</a>
 
             {% if user.is_authenticated %}
 
-                {% if user.role == 'STUDENT' %}
-
-                    <a href="/report/lost/">
-                        Report Lost
-                    </a>
-
-                    <a href="/report/found/">
-                        Report Found
-                    </a>
-
-                    <a href="{% url 'my_reports' %}">
-                        My Reports
-                    </a>
-
-                    <a href="{% url 'my_claims' %}">
-                        My Claims
-                    </a>
-
+                {% if user.role == 'student' or user.role == 'teacher' %}
+                    <a href="{% url 'report_lost' %}">Report Lost</a>
+                    <a href="{% url 'report_found' %}">Report Found</a>
+                    <a href="{% url 'my_reports' %}">My Reports</a>
+                    <a href="{% url 'my_claims' %}">My Claims</a>
                 {% endif %}
 
-                {% if user.role == 'TEACHER' or user.role == 'ADMIN' or user.is_superuser %}
-
+                {% if user.role == 'teacher' %}
                     <a href="{% url 'teacher_dashboard' %}">
-                        Report Verification
+                        Teacher Dashboard
                     </a>
-
-                    <a href="{% url 'claims_dashboard' %}">
-                        Review Claims
-                    </a>
-
                 {% endif %}
 
-                {% if user.role == 'ADMIN' or user.is_superuser %}
-
+                {% if user.role == 'admin' %}
                     <a href="{% url 'admin_dashboard' %}">
                         Admin Dashboard
                     </a>
-
                 {% endif %}
 
-                <!-- NOTIFICATIONS -->
-                <a href="{% url 'notifications' %}" class="notification-link">
-                    Notifications
+                {% if user.role == 'admin' or user.role == 'teacher' %}
+                    <a href="{% url 'claims_dashboard' %}">
+                        Claims Dashboard
+                    </a>
+                {% endif %}
 
-                    {% if unread_notification_count %}
+                <a href="{% url 'notifications' %}">
+                    Notifications
+                    {% if notification_count %}
                         <span class="notification-badge">
-                            {{ unread_notification_count }}
+                            {{ notification_count }}
                         </span>
                     {% endif %}
-                </a>
-
-            {% else %}
-
-                <a href="/report/lost/">
-                    Report Lost
-                </a>
-
-                <a href="/report/found/">
-                    Report Found
                 </a>
 
             {% endif %}
 
         </nav>
 
-        <!-- LOGIN / LOGOUT -->
+        <!-- Authentication Buttons -->
         <div class="nav-buttons">
 
             {% if user.is_authenticated %}
 
                 <span class="user-name">
-                    Hi, {{ user.username }}
+                    {{ user.username }}
                 </span>
 
-                <a href="/logout/" class="signup">
-                    Logout
-                </a>
+                <form
+                    method="post"
+                    action="{% url 'logout' %}"
+                    class="logout-form"
+                >
+                    {% csrf_token %}
+                    <button type="submit" class="logout">
+                        Logout
+                    </button>
+                </form>
 
             {% else %}
 
-                <a href="/login/" class="login">
+                <a href="{% url 'login' %}" class="login">
                     Login
                 </a>
 
-                <a href="/register/" class="signup">
-                    Sign Up ↗
+                <a href="{% url 'register' %}" class="signup">
+                    Sign Up
                 </a>
 
             {% endif %}
@@ -138,7 +114,7 @@
 
     </header>
 
-    <!-- DJANGO MESSAGES -->
+    <!-- Django Messages -->
     {% if messages %}
         <div class="messages-container">
             {% for message in messages %}
@@ -149,27 +125,72 @@
         </div>
     {% endif %}
 
-    <!-- PAGE CONTENT -->
+    <!-- Main Page Content -->
     <main>
-
         {% block content %}
         {% endblock %}
-
     </main>
 
-    <!-- FOOTER -->
+    <!-- Footer -->
     <footer>
-
-        <h3>
-            ✦ CampusFind
-        </h3>
-
-        <p>
-            Reuniting our campus with what matters.
-        </p>
-
+        <h3>✦ CampusFind</h3>
+        <p>Reuniting our campus with what matters.</p>
     </footer>
 
-</body>
+    <!-- Mobile Navigation Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const menuButton = document.querySelector(
+                ".mobile-menu-toggle"
+            );
 
+            const navigation = document.querySelector(
+                "#main-navigation"
+            );
+
+            if (menuButton && navigation) {
+                menuButton.addEventListener("click", function () {
+                    const isOpen = navigation.classList.toggle(
+                        "mobile-menu-open"
+                    );
+
+                    menuButton.setAttribute(
+                        "aria-expanded",
+                        String(isOpen)
+                    );
+
+                    menuButton.setAttribute(
+                        "aria-label",
+                        isOpen
+                            ? "Close navigation menu"
+                            : "Open navigation menu"
+                    );
+
+                    menuButton.textContent = isOpen
+                        ? "✕ Close"
+                        : "☰ Menu";
+                });
+
+                navigation.querySelectorAll("a").forEach(function (link) {
+                    link.addEventListener("click", function () {
+                        navigation.classList.remove("mobile-menu-open");
+
+                        menuButton.setAttribute(
+                            "aria-expanded",
+                            "false"
+                        );
+
+                        menuButton.setAttribute(
+                            "aria-label",
+                            "Open navigation menu"
+                        );
+
+                        menuButton.textContent = "☰ Menu";
+                    });
+                });
+            }
+        });
+    </script>
+
+</body>
 </html>
