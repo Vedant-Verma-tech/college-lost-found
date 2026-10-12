@@ -5,192 +5,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>{% block title %}CampusFind{% endblock %}</title>
-
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
-
 <body>
 
-    <!-- Navigation Bar -->
-    <header class="navbar">
+<header class="navbar">
+    <a href="/" class="logo"><span>✦</span> CampusFind</a>
 
-        <a href="/" class="logo">
-            <span>✦</span> CampusFind
-        </a>
+    <button
+        class="mobile-menu-toggle"
+        type="button"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="main-navigation"
+    >☰ Menu</button>
 
-        <!-- Mobile Menu Button -->
-        <button
-            class="mobile-menu-toggle"
-            type="button"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-            aria-controls="main-navigation"
-        >
-            ☰ Menu
-        </button>
+    <nav id="main-navigation">
+        <a href="/">Home</a>
+        <a href="{% url 'lost_items' %}">Lost Items</a>
+        <a href="{% url 'found_items' %}">Found Items</a>
 
-        <!-- Main Navigation -->
-        <nav id="main-navigation">
-
-            <a href="/">Home</a>
-            <a href="{% url 'lost_items' %}">Lost Items</a>
-            <a href="{% url 'found_items' %}">Found Items</a>
-
-            {% if user.is_authenticated %}
-
-                {% if user.role == 'student' or user.role == 'teacher' %}
-                    <a href="{% url 'report_lost' %}">Report Lost</a>
-                    <a href="{% url 'report_found' %}">Report Found</a>
-                    <a href="{% url 'my_reports' %}">My Reports</a>
-                    <a href="{% url 'my_claims' %}">My Claims</a>
-                {% endif %}
-
-                {% if user.role == 'teacher' %}
-                    <a href="{% url 'teacher_dashboard' %}">
-                        Teacher Dashboard
-                    </a>
-                {% endif %}
-
-                {% if user.role == 'admin' %}
-                    <a href="{% url 'admin_dashboard' %}">
-                        Admin Dashboard
-                    </a>
-                {% endif %}
-
-                {% if user.role == 'admin' or user.role == 'teacher' %}
-                    <a href="{% url 'claims_dashboard' %}">
-                        Claims Dashboard
-                    </a>
-                {% endif %}
-
-                <a href="{% url 'notifications' %}">
-                    Notifications
-                    {% if notification_count %}
-                        <span class="notification-badge">
-                            {{ notification_count }}
-                        </span>
-                    {% endif %}
-                </a>
-
+        {% if user.is_authenticated %}
+            {% if user.role == 'student' or user.role == 'teacher' %}
+                <a href="{% url 'report_lost' %}">Report Lost</a>
+                <a href="{% url 'report_found' %}">Report Found</a>
+                <a href="{% url 'my_reports' %}">My Reports</a>
+                <a href="{% url 'my_claims' %}">My Claims</a>
             {% endif %}
 
-        </nav>
-
-        <!-- Authentication Buttons -->
-        <div class="nav-buttons">
-
-            {% if user.is_authenticated %}
-
-                <span class="user-name">
-                    {{ user.username }}
-                </span>
-
-                <form
-                    method="post"
-                    action="{% url 'logout' %}"
-                    class="logout-form"
-                >
-                    {% csrf_token %}
-                    <button type="submit" class="logout">
-                        Logout
-                    </button>
-                </form>
-
-            {% else %}
-
-                <a href="{% url 'login' %}" class="login">
-                    Login
-                </a>
-
-                <a href="{% url 'register' %}" class="signup">
-                    Sign Up
-                </a>
-
+            {% if user.role == 'teacher' %}
+                <a href="{% url 'teacher_dashboard' %}">Teacher Dashboard</a>
             {% endif %}
 
-        </div>
+            {% if user.role == 'admin' %}
+                <a href="{% url 'admin_dashboard' %}">Admin Dashboard</a>
+            {% endif %}
 
-    </header>
+            {% if user.role == 'admin' or user.role == 'teacher' %}
+                <a href="{% url 'claims_dashboard' %}">Claims Dashboard</a>
+            {% endif %}
 
-    <!-- Django Messages -->
-    {% if messages %}
-        <div class="messages-container">
-            {% for message in messages %}
-                <div class="message {{ message.tags }}">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+            <a href="{% url 'notifications' %}">
+                Notifications
+                {% if notification_count %}
+                    <span class="notification-badge">{{ notification_count }}</span>
+                {% endif %}
+            </a>
+        {% endif %}
+    </nav>
 
-    <!-- Main Page Content -->
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+    <div class="nav-buttons">
+        {% if user.is_authenticated %}
+            <span class="user-name">{{ user.username }}</span>
 
-    <!-- Footer -->
-    <footer>
-        <h3>✦ CampusFind</h3>
-        <p>Reuniting our campus with what matters.</p>
-    </footer>
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="logout">Logout</button>
+            </form>
+        {% else %}
+            <a href="{% url 'login' %}" class="login">Login</a>
+            <a href="{% url 'register' %}" class="signup">Sign Up</a>
+        {% endif %}
+    </div>
+</header>
 
-    <!-- Mobile Navigation Script -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const menuButton = document.querySelector(
-                ".mobile-menu-toggle"
-            );
+{% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+            <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+{% endif %}
 
-            const navigation = document.querySelector(
-                "#main-navigation"
-            );
+<main>
+    {% block content %}{% endblock %}
+</main>
 
-            if (menuButton && navigation) {
-                menuButton.addEventListener("click", function () {
-                    const isOpen = navigation.classList.toggle(
-                        "mobile-menu-open"
-                    );
+<footer>
+    <h3>✦ CampusFind</h3>
+    <p>Reuniting our campus with what matters.</p>
+</footer>
 
-                    menuButton.setAttribute(
-                        "aria-expanded",
-                        String(isOpen)
-                    );
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const menuButton = document.querySelector(".mobile-menu-toggle");
+    const navigation = document.querySelector("#main-navigation");
 
-                    menuButton.setAttribute(
-                        "aria-label",
-                        isOpen
-                            ? "Close navigation menu"
-                            : "Open navigation menu"
-                    );
+    if (!menuButton || !navigation) return;
 
-                    menuButton.textContent = isOpen
-                        ? "✕ Close"
-                        : "☰ Menu";
-                });
+    menuButton.addEventListener("click", function () {
+        const isOpen = navigation.classList.toggle("mobile-menu-open");
 
-                navigation.querySelectorAll("a").forEach(function (link) {
-                    link.addEventListener("click", function () {
-                        navigation.classList.remove("mobile-menu-open");
+        menuButton.setAttribute("aria-expanded", String(isOpen));
+        menuButton.setAttribute(
+            "aria-label",
+            isOpen ? "Close navigation menu" : "Open navigation menu"
+        );
+        menuButton.textContent = isOpen ? "✕ Close" : "☰ Menu";
+    });
 
-                        menuButton.setAttribute(
-                            "aria-expanded",
-                            "false"
-                        );
-
-                        menuButton.setAttribute(
-                            "aria-label",
-                            "Open navigation menu"
-                        );
-
-                        menuButton.textContent = "☰ Menu";
-                    });
-                });
-            }
+    navigation.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+            navigation.classList.remove("mobile-menu-open");
+            menuButton.setAttribute("aria-expanded", "false");
+            menuButton.setAttribute("aria-label", "Open navigation menu");
+            menuButton.textContent = "☰ Menu";
         });
-    </script>
+    });
+});
+</script>
 
 </body>
 </html>
