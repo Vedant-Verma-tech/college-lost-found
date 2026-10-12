@@ -1,22 +1,35 @@
 
 from functools import wraps
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from .forms import ItemReportForm
-from .models import ItemReport, ClaimRequest, Notification
-from .notifications import create_notification
+from accounts.models import EmailOTP
+from accounts.otp_utils import create_and_send_otp, verify_otp
 
+from .forms import ItemReportForm
+from .models import (
+    ItemReport,
+    ClaimRequest,
+    Notification,
+    HandoverVerification,
+)
+from .notifications import create_notification
 
 User = get_user_model()
 
 
+# =========================================================
+# ACCESS CONTROL
+# =========================================================
 
 def staff_role_required(view_func):
     @login_required
@@ -36,8 +49,6 @@ def staff_role_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
-
-
 
 
 def admin_role_required(view_func):
@@ -60,6 +71,10 @@ def admin_role_required(view_func):
 
     return wrapper
 
+
+# =========================================================
+# HOME AND ITEM REPORTS
+# =========================================================
 
 def home(request):
     recent_items = ItemReport.objects.filter(
@@ -90,7 +105,6 @@ def home(request):
     )
 
 
-
 def lost_items(request):
     items = ItemReport.objects.filter(
         report_type="LOST",
@@ -103,6 +117,7 @@ def lost_items(request):
         {"items": items}
     )
 
+
 def found_items(request):
     items = ItemReport.objects.filter(
         report_type="FOUND",
@@ -114,7 +129,6 @@ def found_items(request):
         "reports/found.html",
         {"items": items}
     )
-
 
 
 @login_required
@@ -147,8 +161,6 @@ def report_lost(request):
             "button_text": "Submit Lost Report",
         }
     )
-
-
 
 
 @login_required
@@ -196,7 +208,9 @@ def my_reports(request):
     )
 
 
-
+# =========================================================
+# TEACHER DASHBOARD AND REPORT REVIEW
+# =========================================================
 
 @staff_role_required
 def teacher_dashboard(request):
@@ -209,7 +223,6 @@ def teacher_dashboard(request):
         "reports/teacher_dashboard.html",
         {"items": items}
     )
-
 
 
 @staff_role_required
@@ -266,8 +279,9 @@ def review_report(request, report_id):
     return redirect("teacher_dashboard")
 
 
-
-
+# =========================================================
+# STUDENT: SUBMIT A CLAIM WITH EMAIL OTP
+# =========================================================
 
 @login_required
 @require_POST
@@ -296,7 +310,13 @@ def submit_claim(request, report_id):
         )
         return redirect("found_items")
 
-    
+    if not request.user.email:
+        messages.error(
+            request,
+            "Add an email address to your account before claiming an item."
+        )
+        return redirect("found_items")
+
     active_claim = ClaimRequest.objects.filter(
         item=item,
         claimant=request.user,
@@ -310,36 +330,122 @@ def submit_claim(request, report_id):
         )
         return redirect("my_claims")
 
-    # Recheck availability before creating the claim.
-    if item.status != "VERIFIED":
+    request.session["pending_claim"] = {
+        "item_id": item.pk,
+        "explanation": explanation,
+    }
+
+    try:
+        challenge = create_and_send_otp(request.user, "CLAIM")
+    except Exception:
+        request.session.pop("pending_claim", None)
         messages.error(
             request,
-            "This item is no longer available to claim."
+            "We couldn't send the claim verification code. "
+            "Please try again later."
         )
         return redirect("found_items")
 
-    claim = ClaimRequest.objects.create(
-        item=item,
-        claimant=request.user,
-        explanation=explanation
-    )
-
-    # Notify the person who reported the found item.
-    create_notification(
-        recipient=item.owner,
-        title="New claim submitted",
-        message=(
-            f'A student has submitted a claim for "{item.title}". '
-            "The claim is awaiting staff review."
-        ),
-        report=item
-    )
+    request.session["claim_otp_token"] = str(challenge.token)
 
     messages.success(
         request,
-        "Your claim has been submitted for staff review."
+        "A claim verification code has been sent to your email."
     )
-    return redirect("my_claims")
+    return redirect("verify_claim_otp")
+
+
+@login_required
+def verify_claim_otp(request):
+    token = request.session.get("claim_otp_token")
+    pending_claim = request.session.get("pending_claim")
+
+    if not token or not pending_claim:
+        messages.error(
+            request,
+            "Your pending claim has expired. Please submit it again."
+        )
+        return redirect("found_items")
+
+    challenge = get_object_or_404(
+        EmailOTP,
+        token=token,
+        user=request.user,
+        purpose="CLAIM"
+    )
+
+    if request.method == "POST":
+        code = request.POST.get("otp", "")
+        valid, error_message = verify_otp(challenge, code)
+
+        if not valid:
+            messages.error(request, error_message)
+            return render(
+                request,
+                "accounts/verify_claim_otp.html"
+            )
+
+        with transaction.atomic():
+            item = get_object_or_404(
+                ItemReport.objects.select_for_update(),
+                pk=pending_claim["item_id"],
+                report_type="FOUND",
+                status="VERIFIED"
+            )
+
+            if item.owner_id == request.user.id:
+                messages.error(
+                    request,
+                    "You cannot claim an item you reported."
+                )
+                return redirect("found_items")
+
+            active_claim = ClaimRequest.objects.filter(
+                item=item,
+                claimant=request.user,
+                status__in=["PENDING", "APPROVED"]
+            ).exists()
+
+            if active_claim:
+                request.session.pop("pending_claim", None)
+                request.session.pop("claim_otp_token", None)
+                messages.info(
+                    request,
+                    "You already have an active claim for this item."
+                )
+                return redirect("my_claims")
+
+            claim = ClaimRequest.objects.create(
+                item=item,
+                claimant=request.user,
+                explanation=pending_claim["explanation"]
+            )
+
+            create_notification(
+                recipient=item.owner,
+                title="New claim submitted",
+                message=(
+                    f'A student has submitted a verified claim '
+                    f'for "{item.title}". '
+                    "The claim is awaiting staff review."
+                ),
+                report=item
+            )
+
+        request.session.pop("pending_claim", None)
+        request.session.pop("claim_otp_token", None)
+
+        messages.success(
+            request,
+            "Your email has been verified and your claim "
+            "has been submitted for staff review."
+        )
+        return redirect("my_claims")
+
+    return render(
+        request,
+        "accounts/verify_claim_otp.html"
+    )
 
 
 # =========================================================
@@ -359,7 +465,10 @@ def my_claims(request):
     return render(
         request,
         "reports/my_claims.html",
-        {"claims": claims}
+        {
+            "claims": claims,
+            "now": timezone.now(),
+        }
     )
 
 
@@ -397,13 +506,16 @@ def claims_dashboard(request):
 
 
 # =========================================================
-# REVIEW A CLAIM
+# STAFF: APPROVE OR REJECT A CLAIM
 # =========================================================
 
 @staff_role_required
 @require_POST
 def review_claim(request, claim_id):
     action = request.POST.get("action", "").lower()
+    email_to_send = None
+    email_subject = None
+    email_message = None
 
     with transaction.atomic():
         claim = get_object_or_404(
@@ -433,8 +545,6 @@ def review_claim(request, claim_id):
                 )
                 return redirect("claims_dashboard")
 
-            # Do not approve if another claim was already approved
-            # or the item has already been returned.
             other_approved = ClaimRequest.objects.filter(
                 item=item,
                 status__in=["APPROVED", "RETURNED"]
@@ -469,10 +579,7 @@ def review_claim(request, claim_id):
             success_message = f'Claim for "{item.title}" rejected.'
 
         else:
-            messages.error(
-                request,
-                "Invalid claim review action."
-            )
+            messages.error(request, "Invalid claim review action.")
             return redirect("claims_dashboard")
 
         claim.reviewed_by = request.user
@@ -485,7 +592,36 @@ def review_claim(request, claim_id):
         if action == "approve":
             item.save(update_fields=["status", "updated_at"])
 
-        # Notify the student who submitted the claim.
+            # Create the handover code only after approval.
+            verification = HandoverVerification.create_for_claim(claim)
+
+            # Prepare the email; send it only after the transaction commits.
+            if claim.claimant.email:
+                email_to_send = claim.claimant.email
+                email_subject = (
+                    "CampusFind - Item Handover Verification Code"
+                )
+                email_message = (
+                    f"Hello {claim.claimant.username},\n\n"
+                    f'Your claim for "{item.title}" has been approved.\n\n'
+                    f"Your 6-digit handover verification code is: "
+                    f"{verification.code}\n\n"
+                    f"This code expires at "
+                    f"{verification.expires_at.strftime('%d %b %Y, %I:%M %p')}.\n\n"
+                    "Show this code to authorized college staff "
+                    "when collecting your item. Do not share it "
+                    "with anyone else.\n\n"
+                    "Regards,\nCampusFind Team"
+                )
+
+                transaction.on_commit(
+                    lambda recipient=email_to_send,
+                    subject=email_subject,
+                    body=email_message: send_handover_email(
+                        recipient, subject, body
+                    )
+                )
+
         create_notification(
             recipient=claim.claimant,
             title=notification_title,
@@ -494,11 +630,126 @@ def review_claim(request, claim_id):
         )
 
     messages.success(request, success_message)
+
+    if action == "approve" and not claim.claimant.email:
+        messages.warning(
+            request,
+            "The claim was approved, but the claimant has no email address. "
+            "Please update their account email."
+        )
+
+    return redirect("claims_dashboard")
+
+
+def send_handover_email(recipient, subject, body):
+    """
+    Send the handover email after the claim approval transaction commits.
+    Failures are logged instead of turning a successful approval into
+    an error page.
+    """
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        sent_count = send_mail(
+            subject=subject,
+            message=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+
+        if sent_count != 1:
+            logger.error(
+                "CampusFind handover email was not sent to %s",
+                recipient,
+            )
+
+    except Exception:
+        logger.exception(
+            "Failed to send CampusFind handover email to %s",
+            recipient,
+        )
+
+
+# =========================================================
+# STAFF: VERIFY THE CLAIMANT'S HANDOVER CODE
+# =========================================================
+
+@staff_role_required
+@require_POST
+def verify_handover(request, claim_id):
+    with transaction.atomic():
+        claim = get_object_or_404(
+            ClaimRequest.objects.select_for_update(),
+            pk=claim_id
+        )
+
+        if claim.status != "APPROVED":
+            messages.error(
+                request,
+                "Only approved claims can be verified."
+            )
+            return redirect("claims_dashboard")
+
+        verification = HandoverVerification.objects.select_for_update().filter(
+            claim=claim
+        ).first()
+
+        if verification is None:
+            messages.error(
+                request,
+                "No handover code exists for this claim."
+            )
+            return redirect("claims_dashboard")
+
+        if verification.verified_at is not None or verification.is_used:
+            messages.info(
+                request,
+                "This handover code has already been used."
+            )
+            return redirect("claims_dashboard")
+
+        if verification.expires_at <= timezone.now():
+            messages.error(
+                request,
+                "The handover code has expired. A new code is needed."
+            )
+            return redirect("claims_dashboard")
+
+        submitted_code = request.POST.get("code", "").strip()
+
+        if (
+            len(submitted_code) != 6
+            or not submitted_code.isdigit()
+            or submitted_code != verification.code
+        ):
+            messages.error(
+                request,
+                "Incorrect handover code. Please check with the claimant."
+            )
+            return redirect("claims_dashboard")
+
+        verification.is_used = True
+        verification.verified_at = timezone.now()
+        verification.verified_by = request.user
+        verification.save(update_fields=[
+            "is_used",
+            "verified_at",
+            "verified_by"
+        ])
+
+    messages.success(
+        request,
+        "Claimant verified. After physically handing over the item, "
+        "confirm the return."
+    )
     return redirect("claims_dashboard")
 
 
 # =========================================================
-# CONFIRM ITEM RETURN
+# STAFF: CONFIRM PHYSICAL ITEM RETURN
 # =========================================================
 
 @staff_role_required
@@ -525,6 +776,20 @@ def confirm_item_return(request, claim_id):
             )
             return redirect("claims_dashboard")
 
+        verification = HandoverVerification.objects.select_for_update().filter(
+            claim=claim,
+            is_used=True,
+            verified_at__isnull=False
+        ).first()
+
+        if verification is None:
+            messages.error(
+                request,
+                "Verify the claimant's handover code before "
+                "confirming the return."
+            )
+            return redirect("claims_dashboard")
+
         claim.status = "RETURNED"
         claim.reviewed_by = request.user
         claim.save(update_fields=[
@@ -536,7 +801,6 @@ def confirm_item_return(request, claim_id):
         item.status = "RETURNED"
         item.save(update_fields=["status", "updated_at"])
 
-        # Notify the student who claimed the item.
         create_notification(
             recipient=claim.claimant,
             title="Item return confirmed",
@@ -547,7 +811,6 @@ def confirm_item_return(request, claim_id):
             report=item
         )
 
-        # Notify the person who originally reported the found item.
         create_notification(
             recipient=item.owner,
             title="Item marked as returned",
@@ -583,12 +846,8 @@ def admin_dashboard(request):
 
     context = {
         "total_users": User.objects.count(),
-        "total_students": User.objects.filter(
-            role="STUDENT"
-        ).count(),
-        "total_teachers": User.objects.filter(
-            role="TEACHER"
-        ).count(),
+        "total_students": User.objects.filter(role="STUDENT").count(),
+        "total_teachers": User.objects.filter(role="TEACHER").count(),
         "total_reports": ItemReport.objects.count(),
         "pending_reports": ItemReport.objects.filter(
             status="PENDING"
@@ -663,7 +922,6 @@ def admin_reports(request):
     valid_statuses = [
         choice[0] for choice in ItemReport.STATUS_CHOICES
     ]
-
     valid_types = [
         choice[0] for choice in ItemReport.TYPE_CHOICES
     ]
@@ -837,3 +1095,41 @@ def mark_notification_read(request, notification_id):
 
     return redirect("notifications")
 
+
+    
+
+
+# =========================================================
+# ADMIN: DELETE REPORT
+# =========================================================
+
+@admin_role_required
+@require_POST
+def admin_delete_report(request, report_id):
+    item = get_object_or_404(
+        ItemReport,
+        pk=report_id
+    )
+
+    title = item.title
+
+    # Protect reports with pending or approved claims.
+    if ClaimRequest.objects.filter(
+        item=item,
+        status__in=["PENDING", "APPROVED"]
+    ).exists():
+        messages.error(
+            request,
+            "This report cannot be deleted because it has "
+            "a pending or approved claim."
+        )
+        return redirect("admin_reports")
+
+    item.delete()
+
+    messages.success(
+        request,
+        f'Report "{title}" was deleted successfully.'
+    )
+
+    return redirect("admin_reports")

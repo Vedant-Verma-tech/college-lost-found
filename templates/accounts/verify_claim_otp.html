@@ -1,0 +1,48 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Verify Claim — CampusFind{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">✦ CampusFind</div>
+
+        <h1>Verify your claim</h1>
+        <p class="auth-subtitle">
+            Enter the six-digit code sent to your registered email
+            to submit your claim.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <label for="otp">Email verification code</label>
+            <input
+                type="text"
+                id="otp"
+                name="otp"
+                placeholder="Enter 6-digit code"
+                inputmode="numeric"
+                pattern="[0-9]{6}"
+                maxlength="6"
+                required
+            >
+
+            <button type="submit" class="primary-btn auth-btn">
+                Verify &amp; Submit Claim →
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'found_items' %}">Back to found items</a>
+        </p>
+    </div>
+</section>
+{% endblock %}

@@ -1,41 +1,180 @@
 
 {% extends "base.html" %}
 
+{% block title %}My Claims | CampusFind{% endblock %}
+
 {% block content %}
-<div class="report-page">
-    <h1>My Claims</h1>
-    <p>Track your requests for found items.</p>
+
+<section class="my-claims-page">
+
+    <div class="my-claims-header">
+        <span class="my-claims-eyebrow">CAMPUSFIND · YOUR ACTIVITY</span>
+        <h1>My Claims</h1>
+        <p>Track your claim requests and see when your items are ready for collection.</p>
+    </div>
 
     {% if messages %}
-        {% for message in messages %}
-            <p class="report-message">{{ message }}</p>
-        {% endfor %}
+        <div class="my-claims-messages">
+            {% for message in messages %}
+                <div class="claim-message {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
     {% endif %}
 
-    {% for claim in claims %}
-        <article class="my-report-card">
-            <div class="my-report-info">
-                <h2>{{ claim.item.title }}</h2>
+    {% if claims %}
 
-                <p><strong>Location:</strong> {{ claim.item.location }}</p>
-                <p><strong>Claim submitted:</strong> {{ claim.created_at|date:"M d, Y H:i" }}</p>
-                <p><strong>Your explanation:</strong> {{ claim.explanation }}</p>
-                <p>
-                    <strong>Claim status:</strong>
-                    <span class="status-{{ claim.status|lower }}">
-                        {{ claim.get_status_display }}
-                    </span>
-                </p>
-                <p>
-                    <strong>Item status:</strong>
-                    {{ claim.item.get_status_display }}
-                </p>
-            </div>
-        </article>
-    {% empty %}
-        <p>You haven't submitted any claims yet.</p>
-    {% endfor %}
+        <div class="my-claims-list">
 
-    <p><a href="{% url 'found_items' %}">Browse found items</a></p>
-</div>
+            {% for claim in claims %}
+
+                <article class="my-claim-card">
+
+                    <div class="my-claim-card-header">
+                        <div>
+                            <span class="my-claim-label">CLAIMED ITEM</span>
+                            <h2>{{ claim.item.title }}</h2>
+                        </div>
+
+                        <span class="my-claim-status status-{{ claim.status|lower }}">
+                            {{ claim.get_status_display }}
+                        </span>
+                    </div>
+
+                    <div class="my-claim-details">
+
+                        <div class="my-claim-detail">
+                            <span class="detail-icon">📍</span>
+                            <div>
+                                <span class="detail-label">Location</span>
+                                <p>{{ claim.item.location }}</p>
+                            </div>
+                        </div>
+
+                        <div class="my-claim-detail">
+                            <span class="detail-icon">📅</span>
+                            <div>
+                                <span class="detail-label">Claim submitted</span>
+                                <p>{{ claim.created_at|date:"d M Y, h:i A" }}</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="my-claim-explanation">
+                        <span class="detail-label">Your explanation</span>
+                        <p>{{ claim.explanation }}</p>
+                    </div>
+
+                    {% if claim.status == "PENDING" %}
+
+                        <div class="claim-status-message pending-message">
+                            <span class="status-message-icon">◷</span>
+                            <div>
+                                <strong>Awaiting review</strong>
+                                <p>Your claim is waiting for a teacher or administrator to review it.</p>
+                            </div>
+                        </div>
+
+                    {% elif claim.status == "APPROVED" %}
+
+                        <div class="claim-status-message approved-message">
+                            <span class="status-message-icon">✓</span>
+                            <div>
+                                <strong>Your claim has been approved</strong>
+                                <p>Coordinate with college staff to collect your item. Show your handover verification code to the authorized staff member.</p>
+                            </div>
+                        </div>
+
+                        {% if claim.handover_verification %}
+
+                            {% if not claim.handover_verification.is_used %}
+
+                                {% if claim.handover_verification.expires_at > now %}
+
+                                    <div class="handover-code-panel">
+                                        <span class="detail-label">YOUR HANDOVER VERIFICATION CODE</span>
+                                        <div class="handover-code">
+                                            {{ claim.handover_verification.code }}
+                                        </div>
+                                        <p>This code expires at {{ claim.handover_verification.expires_at|date:"d M Y, h:i A" }}.</p>
+                                        <small>Keep this code private. Show it only to authorized college staff during collection.</small>
+                                    </div>
+
+                                {% else %}
+
+                                    <div class="claim-status-message expired-message">
+                                        <strong>Verification code expired</strong>
+                                        <p>Please contact college staff to arrange a new code.</p>
+                                    </div>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <div class="claim-status-message approved-message">
+                                    <strong>✓ Handover code verified</strong>
+                                    <p>Staff has verified your code. The item return will be marked complete after the physical handover is confirmed.</p>
+                                </div>
+
+                            {% endif %}
+
+                        {% else %}
+
+                            <div class="claim-status-message pending-message">
+                                <strong>Verification code not available yet</strong>
+                                <p>Please contact college staff for assistance.</p>
+                            </div>
+
+                        {% endif %}
+
+                    {% elif claim.status == "REJECTED" %}
+
+                        <div class="claim-status-message rejected-message">
+                            <span class="status-message-icon">!</span>
+                            <div>
+                                <strong>Claim not approved</strong>
+                                <p>Your claim was rejected. Please contact college staff if you need clarification.</p>
+                            </div>
+                        </div>
+
+                    {% elif claim.status == "RETURNED" %}
+
+                        <div class="claim-status-message returned-message">
+                            <span class="status-message-icon">✓</span>
+                            <div>
+                                <strong>Item returned successfully</strong>
+                                <p>This item has been marked as returned. Thank you for using CampusFind!</p>
+                            </div>
+                        </div>
+
+                    {% endif %}
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div class="my-claims-empty">
+            <div class="empty-icon">✦</div>
+            <h2>No claims yet</h2>
+            <p>When you submit a claim for a found item, its status will appear here.</p>
+            <a href="{% url 'found_items' %}" class="my-claims-primary-btn">
+                Browse Found Items →
+            </a>
+        </div>
+
+    {% endif %}
+
+    <div class="my-claims-back">
+        <a href="{% url 'home' %}">← Back to Home</a>
+    </div>
+
+</section>
+
 {% endblock %}
+

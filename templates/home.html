@@ -1,60 +1,47 @@
+
 {% extends 'base.html' %}
 
-
 {% block title %}
-
 CampusFind — College Lost & Found
-
 {% endblock %}
 
-
 {% block content %}
+
+<!-- =========================
+     HERO SECTION
+========================= -->
 
 <section class="hero">
 
     <div class="hero-content">
 
         <div class="badge">
-
             ✦ COLLEGE LOST & FOUND
-
         </div>
 
-
         <h1>
-
             Lost something?
-
             <br>
-
-            <span>
-                Let's find it.
-            </span>
-
+            <span>Let's find it.</span>
         </h1>
 
-
         <p>
-
             CampusFind helps students and teachers
             report, discover and recover lost belongings
             across campus.
-
         </p>
-
 
         <div class="hero-actions">
 
             <a
-                href="/report/lost/"
+                href="{% url 'report_lost' %}"
                 class="primary-btn"
             >
                 Report Lost ↗
             </a>
 
-
             <a
-                href="/report/found/"
+                href="{% url 'report_found' %}"
                 class="secondary-btn"
             >
                 Report Found
@@ -65,95 +52,128 @@ CampusFind — College Lost & Found
     </div>
 
 
+    <!-- =========================
+         CLICKABLE RECENT REPORT CARD
+    ========================= -->
+
     <div class="hero-visual">
 
-        <div class="dashboard-card">
+        {% with item=recent_items.0 %}
 
-            <div class="card-top">
+            {% if item %}
 
-                <span>
-                    ● Recently Found
-                </span>
+                <a
+                    href="{% if item.report_type == 'LOST' %}{% url 'lost_items' %}{% else %}{% url 'found_items' %}{% endif %}"
+                    class="dashboard-card dashboard-card-link"
+                    aria-label="View report for {{ item.title }}"
+                >
 
-                <small>
-                    Campus
-                </small>
+                    <div class="card-top">
 
-            </div>
+                        <span>
+                            ●
+                            {% if item.report_type == 'FOUND' %}
+                                Recently Found
+                            {% else %}
+                                Recently Lost
+                            {% endif %}
+                        </span>
 
+                        <small>Campus</small>
 
-            <h2>
-                Black Backpack
-            </h2>
-
-
-            <p>
-                Found near Central Library
-            </p>
-
-
-            <div class="location">
-
-                📍 Central Library
-
-            </div>
+                    </div>
 
 
-            <div class="card-button">
+                    <h2>
+                        {{ item.title }}
+                    </h2>
 
-                View details →
 
-            </div>
+                    <p>
+                        {% if item.report_type == 'FOUND' %}
+                            Found near {{ item.location }}
+                        {% else %}
+                            Lost near {{ item.location }}
+                        {% endif %}
+                    </p>
 
-        </div>
+
+                    <div class="location">
+                        📍 {{ item.location }}
+                    </div>
+
+
+                    <div class="card-button">
+                        View reports →
+                    </div>
+
+                </a>
+
+            {% else %}
+
+                <div class="dashboard-card">
+
+                    <div class="card-top">
+                        <span>● Recently Reported</span>
+                        <small>Campus</small>
+                    </div>
+
+                    <h2>No recent reports</h2>
+
+                    <p>
+                        New verified lost and found reports
+                        will appear here.
+                    </p>
+
+                    <div class="location">
+                        📍 Your Campus
+                    </div>
+
+                    <a
+                        href="{% url 'found_items' %}"
+                        class="card-button"
+                    >
+                        Browse reports →
+                    </a>
+
+                </div>
+
+            {% endif %}
+
+        {% endwith %}
 
     </div>
 
 </section>
 
+
+<!-- =========================
+     STATISTICS SECTION
+========================= -->
 
 <section class="stats">
 
     <div>
-
-        <strong>
-            {{ lost_count }}
-        </strong>
-
-        <span>
-            Lost Reports
-        </span>
-
+        <strong>{{ lost_count }}</strong>
+        <span>Lost Reports</span>
     </div>
 
-
     <div>
-
-        <strong>
-            {{ found_count }}
-        </strong>
-
-        <span>
-            Found Items
-        </span>
-
+        <strong>{{ found_count }}</strong>
+        <span>Found Items</span>
     </div>
 
-
     <div>
-
-        <strong>
-            {{ returned_count }}
-        </strong>
-
-        <span>
-            Items Returned
-        </span>
-
+        <strong>{{ returned_count }}</strong>
+        <span>Items Returned</span>
     </div>
 
 </section>
 
+
+<!-- =========================
+     RECENT REPORTS SECTION
+========================= -->
 
 <section class="items-section">
 
@@ -161,24 +181,16 @@ CampusFind — College Lost & Found
 
         <div>
 
-            <small>
-                RECENT REPORTS
-            </small>
+            <small>RECENT REPORTS</small>
 
             <h2>
-
                 Help something
-
-                <span>
-                    find its owner.
-                </span>
-
+                <span>find its owner.</span>
             </h2>
 
         </div>
 
-
-        <a href="/lost/">
+        <a href="{% url 'found_items' %}">
             View all →
         </a>
 
@@ -189,50 +201,62 @@ CampusFind — College Lost & Found
 
         {% for item in recent_items %}
 
-        <article class="item-card">
+            <article class="item-card">
 
-            {% if item.image %}
+                {% if item.image %}
 
-                <img
-                    src="{{ item.image.url }}"
-                    alt="{{ item.title }}"
-                >
+                    <img
+                        src="{{ item.image.url }}"
+                        alt="{{ item.title }}"
+                        loading="lazy"
+                    >
 
-            {% else %}
+                {% else %}
 
-                <div class="no-image">
-                    No Image
+                    <div class="no-image">
+                        No Image
+                    </div>
+
+                {% endif %}
+
+
+                <div class="item-content">
+
+                    <small>
+                        {% if item.report_type == 'FOUND' %}
+                            FOUND
+                        {% else %}
+                            LOST
+                        {% endif %}
+                    </small>
+
+
+                    <h3>
+                        {{ item.title }}
+                    </h3>
+
+
+                    <p>
+                        📍 {{ item.location }}
+                    </p>
+
+
+                    <a
+                        href="{% if item.report_type == 'LOST' %}{% url 'lost_items' %}{% else %}{% url 'found_items' %}{% endif %}"
+                        class="item-view-link"
+                    >
+                        View report →
+                    </a>
+
                 </div>
 
-            {% endif %}
-
-
-            <div class="item-content">
-
-                <small>
-                    {{ item.report_type }}
-                </small>
-
-
-                <h3>
-                    {{ item.title }}
-                </h3>
-
-
-                <p>
-                    📍 {{ item.location }}
-                </p>
-
-
-            </div>
-
-        </article>
+            </article>
 
         {% empty %}
 
-        <p class="empty">
-            No reports yet.
-        </p>
+            <p class="empty">
+                No verified reports yet. Check back soon!
+            </p>
 
         {% endfor %}
 
@@ -241,3 +265,4 @@ CampusFind — College Lost & Found
 </section>
 
 {% endblock %}
+

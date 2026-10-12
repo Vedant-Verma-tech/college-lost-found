@@ -39,6 +39,27 @@ urlpatterns = [
 
 
     path(
+    "claims/verify-otp/",
+    views.verify_claim_otp,
+    name="verify_claim_otp",
+),
+
+
+    path(
+    "teacher/claims/<int:claim_id>/verify-handover/",
+    views.verify_handover,
+    name="verify_handover",
+),    
+
+    path(
+    "campus-admin/reports/<int:report_id>/delete/",
+    views.admin_delete_report,
+    name="admin_delete_report",
+),
+
+    
+
+    path(
         'items/<int:report_id>/claim/',
         views.submit_claim,
         name='submit_claim'

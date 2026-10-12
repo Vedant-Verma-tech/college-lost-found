@@ -1,0 +1,52 @@
+
+{% extends 'base.html' %}
+
+{% block title %}
+Verify Email — CampusFind
+{% endblock %}
+
+{% block content %}
+<section class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">✦ CampusFind</div>
+
+        <h1>Verify your email</h1>
+
+        <p class="auth-subtitle">
+            Enter the 6-digit verification code sent to your email.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <label for="otp">Email verification code</label>
+            <input
+                type="text"
+                id="otp"
+                name="otp"
+                placeholder="Enter 6-digit code"
+                inputmode="numeric"
+                pattern="[0-9]{6}"
+                maxlength="6"
+                required
+            >
+
+            <button type="submit" class="primary-btn auth-btn">
+                Verify &amp; Login →
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            <a href="{% url 'login' %}">Back to login</a>
+        </p>
+    </div>
+</section>
+{% endblock %}
+
+

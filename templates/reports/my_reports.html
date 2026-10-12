@@ -1,475 +1,229 @@
 
 {% extends 'base.html' %}
 
-{% block title %}My Reports — CampusFind{% endblock %}
+{% block title %}Manage Reports | CampusFind{% endblock %}
 
 {% block content %}
 
-<style>
-/* ================================
-   MY REPORTS PAGE
-================================ */
+<section class="listing-page admin-management-page">
 
-.listing-page {
-    width: min(1100px, calc(100% - 48px));
-    margin: 0 auto;
-    padding: 48px 0 70px;
-    color: #f8fafc;
-    box-sizing: border-box;
-}
-
-/* Page heading */
-.listing-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin-bottom: 36px;
-}
-
-.listing-header small {
-    display: block;
-    color: #a78bfa;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    margin-bottom: 12px;
-}
-
-.listing-header h1 {
-    color: #ffffff;
-    font-size: clamp(30px, 4vw, 42px);
-    line-height: 1.2;
-    margin: 0 0 12px;
-}
-
-.listing-header p {
-    color: #cbd5e1;
-    font-size: 16px;
-    line-height: 1.7;
-    margin: 0;
-}
-
-/* Buttons */
-.listing-page .primary-btn {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    text-decoration: none;
-    box-sizing: border-box;
-    flex-shrink: 0;
-}
-
-/* Status messages */
-.report-message {
-    color: #f8fafc;
-    background: #211b38;
-    border: 1px solid #514078;
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 20px;
-}
-
-/* ================================
-   REPORT CARDS
-================================ */
-
-.my-reports-list {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 22px;
-    width: 100%;
-}
-
-.my-reports-list .my-report-card {
-    display: grid;
-    grid-template-columns: 200px minmax(0, 1fr) auto;
-    align-items: start;
-    gap: 24px;
-    width: 100%;
-    min-width: 0;
-    padding: 24px;
-    box-sizing: border-box;
-    overflow: hidden;
-    background: #11101d;
-    border: 1px solid #302b43;
-    border-radius: 16px;
-    transition: border-color 0.2s ease, transform 0.2s ease;
-}
-
-.my-reports-list .my-report-card:hover {
-    border-color: #7160a5;
-    transform: translateY(-2px);
-}
-
-/* Item image */
-.my-reports-list .my-report-image {
-    width: 200px;
-    max-width: 100%;
-    min-width: 0;
-    overflow: hidden;
-}
-
-.my-reports-list .my-report-image a {
-    display: block;
-    width: 100%;
-}
-
-.my-reports-list .my-report-photo {
-    display: block;
-    width: 200px;
-    max-width: 100%;
-    height: 165px;
-    object-fit: contain;
-    background: #171626;
-    border: 1px solid #343044;
-    border-radius: 10px;
-    box-sizing: border-box;
-    margin: 0;
-}
-
-.my-reports-list .my-report-no-image {
-    width: 200px;
-    max-width: 100%;
-    height: 165px;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: #171626;
-    border: 1px dashed #45415f;
-    border-radius: 10px;
-    color: #c4b5fd;
-    text-align: center;
-}
-
-.my-reports-list .my-report-no-image span {
-    font-size: 30px;
-}
-
-.my-reports-list .my-report-no-image p {
-    margin: 0;
-    font-size: 13px;
-}
-
-/* Report details */
-.my-reports-list .my-report-info {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.my-reports-list .report-type-tag {
-    display: inline-block;
-    padding: 6px 11px;
-    background: #292044;
-    color: #c4b5fd;
-    border: 1px solid #514078;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.my-reports-list .my-report-info h2 {
-    color: #ffffff;
-    margin: 12px 0 10px;
-    font-size: 22px;
-    line-height: 1.4;
-    overflow-wrap: anywhere;
-}
-
-.my-reports-list .my-report-info p {
-    color: #cbd5e1;
-    font-size: 14px;
-    line-height: 1.8;
-    margin: 5px 0;
-    overflow-wrap: anywhere;
-}
-
-.my-reports-list .my-report-info strong {
-    color: #f1f5f9;
-}
-
-.my-reports-list .my-report-info .report-description {
-    margin-top: 14px;
-    color: #e2e8f0;
-}
-
-/* Report status */
-.my-reports-list .report-status {
-    display: inline-block;
-    justify-self: end;
-    max-width: 140px;
-    padding: 8px 12px;
-    border-radius: 20px;
-    font-size: 12px;
-    font-weight: 700;
-    text-align: center;
-    overflow-wrap: anywhere;
-    background: #292044;
-    color: #c4b5fd;
-    border: 1px solid #514078;
-}
-
-.my-reports-list .status-pending {
-    background: #352817;
-    color: #fcd34d;
-    border-color: #765523;
-}
-
-.my-reports-list .status-verified {
-    background: #123226;
-    color: #86efac;
-    border-color: #286747;
-}
-
-.my-reports-list .status-rejected {
-    background: #3a1c25;
-    color: #fda4af;
-    border-color: #783044;
-}
-
-.my-reports-list .status-claimed {
-    background: #1e2d4d;
-    color: #93c5fd;
-    border-color: #365b91;
-}
-
-.my-reports-list .status-returned {
-    background: #153532;
-    color: #99f6e4;
-    border-color: #28665d;
-}
-
-/* ================================
-   EMPTY STATE
-================================ */
-
-.my-reports-list .empty-state {
-    min-height: 280px;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 42px 24px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    text-align: center;
-    background: #11101d;
-    border: 1px dashed #38334f;
-    border-radius: 20px;
-}
-
-.my-reports-list .empty-state > div {
-    color: #a78bfa;
-    font-size: 42px;
-    line-height: 1;
-    margin-bottom: 4px;
-}
-
-.my-reports-list .empty-state h2 {
-    color: #ffffff;
-    font-size: 26px;
-    margin: 0;
-    line-height: 1.4;
-}
-
-.my-reports-list .empty-state p {
-    color: #cbd5e1;
-    line-height: 1.7;
-    margin: 0;
-    max-width: 450px;
-}
-
-.my-reports-list .empty-state .primary-btn {
-    margin-top: 8px;
-}
-
-/* ================================
-   RESPONSIVE DESIGN
-================================ */
-
-@media (max-width: 900px) {
-    .my-reports-list .my-report-card {
-        grid-template-columns: 160px minmax(0, 1fr);
-        gap: 20px;
-    }
-
-    .my-reports-list .my-report-image {
-        width: 160px;
-    }
-
-    .my-reports-list .my-report-photo,
-    .my-reports-list .my-report-no-image {
-        width: 160px;
-        height: 145px;
-    }
-
-    .my-reports-list .report-status {
-        grid-column: 2;
-        justify-self: start;
-        margin-top: -8px;
-    }
-}
-
-@media (max-width: 600px) {
-    .listing-page {
-        width: calc(100% - 32px);
-        padding: 32px 0 48px;
-    }
-
-    .listing-header {
-        align-items: flex-start;
-        gap: 18px;
-        margin-bottom: 26px;
-    }
-
-    .listing-header h1 {
-        font-size: 30px;
-    }
-
-    .listing-header p {
-        font-size: 14px;
-    }
-
-    .my-reports-list .my-report-card {
-        grid-template-columns: minmax(0, 1fr);
-        gap: 18px;
-        padding: 18px;
-    }
-
-    .my-reports-list .my-report-image {
-        width: 100%;
-        max-width: 320px;
-    }
-
-    .my-reports-list .my-report-photo,
-    .my-reports-list .my-report-no-image {
-        width: 100%;
-        max-width: 320px;
-        height: 190px;
-    }
-
-    .my-reports-list .report-status {
-        grid-column: 1;
-        justify-self: start;
-        margin-top: 0;
-    }
-
-    .my-reports-list .empty-state {
-        min-height: 250px;
-        padding: 32px 18px;
-    }
-
-    .my-reports-list .empty-state h2 {
-        font-size: 23px;
-    }
-}
-</style>
-
-<section class="listing-page">
-
+    <!-- PAGE HEADER -->
     <div class="listing-header">
         <div>
-            <small>CAMPUSFIND / YOUR ACTIVITY</small>
-            <h1>My Reports</h1>
-            <p>Track the status of your lost and found submissions.</p>
+            <small>CAMPUSFIND / ADMIN PORTAL</small>
+            <h1>Report Management</h1>
+            <p>Review and manage all lost and found submissions.</p>
         </div>
 
-        <a href="/" class="primary-btn">Back Home →</a>
+        <a class="admin-back-link" href="{% url 'admin_dashboard' %}">
+            Back to Dashboard
+        </a>
     </div>
 
+    <!-- DJANGO MESSAGES -->
     {% if messages %}
         {% for message in messages %}
-            <div class="report-message">{{ message }}</div>
+            <div class="report-message {{ message.tags }}">
+                {{ message }}
+            </div>
         {% endfor %}
     {% endif %}
 
-    <div class="my-reports-list">
+    <!-- SEARCH AND FILTERS -->
+    <form method="GET" class="admin-filter-form">
 
-        {% for item in items %}
+        <input
+            type="search"
+            name="q"
+            placeholder="Search item, location or username"
+            value="{{ search }}"
+        >
 
-            <article class="my-report-card">
+        <select name="type">
+            <option value="">Lost and Found</option>
+            {% for value, label in report_types %}
+                <option value="{{ value }}"
+                    {% if selected_type == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
 
-                <div class="my-report-image">
-                    {% if item.image %}
-                        <a href="{{ item.image.url }}"
-                           target="_blank"
-                           rel="noopener noreferrer">
-                            <img src="{{ item.image.url }}"
-                                 alt="{{ item.title }}"
-                                 class="my-report-photo"
-                                 loading="lazy">
-                        </a>
-                    {% else %}
-                        <div class="my-report-no-image">
-                            <span>✦</span>
-                            <p>No image uploaded</p>
-                        </div>
-                    {% endif %}
-                </div>
+        <select name="status">
+            <option value="">All statuses</option>
+            {% for value, label in statuses %}
+                <option value="{{ value }}"
+                    {% if selected_status == value %}selected{% endif %}>
+                    {{ label }}
+                </option>
+            {% endfor %}
+        </select>
 
-                <div class="my-report-info">
+        <button type="submit" class="approve-btn">
+            Filter
+        </button>
 
-                    <span class="report-type-tag">
-                        {{ item.get_report_type_display }}
-                    </span>
+        <a href="{% url 'admin_reports' %}" class="admin-back-link">
+            Clear
+        </a>
 
-                    <h2>{{ item.title }}</h2>
+    </form>
 
-                    <p>
-                        {{ item.get_category_display }}
-                        · {{ item.location }}
-                    </p>
+    <!-- REPORTS TABLE -->
+    <div class="admin-table-wrapper">
 
-                    <p>
-                        Reported on
-                        {{ item.created_at|date:"d M Y, h:i A" }}
-                    </p>
+        <table class="admin-reports-table">
 
-                    {% if item.description %}
-                        <p class="report-description">
-                            {{ item.description }}
-                        </p>
-                    {% endif %}
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Type</th>
+                    <th>Location</th>
+                    <th>Submitted By</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Update Status</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
 
-                    {% if item.date_occurred %}
-                        <p>
-                            <strong>Date lost/found:</strong>
-                            {{ item.date_occurred|date:"d M Y" }}
-                        </p>
-                    {% endif %}
+            <tbody>
 
-                </div>
+                {% for item in items %}
 
-                <span class="report-status status-{{ item.status|lower }}">
-                    {{ item.get_status_display }}
-                </span>
+                    <tr>
 
-            </article>
+                        <!-- ITEM DETAILS -->
+                        <td>
+                            <strong>{{ item.title }}</strong>
 
-        {% empty %}
+                            {% if item.image %}
+                                <br>
+                                <a
+                                    href="{{ item.image.url }}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    View image
+                                </a>
+                            {% endif %}
+                        </td>
 
-            <div class="empty-state">
-                <div>✦</div>
-                <h2>No reports yet</h2>
-                <p>Your lost and found submissions will appear here.</p>
+                        <td>{{ item.get_report_type_display }}</td>
 
-                <a href="{% url 'report_lost' %}" class="primary-btn">
-                    Report an Item →
-                </a>
-            </div>
+                        <td>{{ item.location }}</td>
 
-        {% endfor %}
+                        <td>{{ item.owner.username }}</td>
+
+                        <td>{{ item.date_occurred|date:"d M Y" }}</td>
+
+                        <td>{{ item.get_status_display }}</td>
+
+                        <!-- UPDATE STATUS -->
+                        <td>
+                            <form
+                                method="POST"
+                                action="{% url 'admin_update_report_status' item.pk %}"
+                            >
+                                {% csrf_token %}
+
+                                <select name="status" aria-label="Update report status">
+                                    {% for value, label in statuses %}
+                                        <option value="{{ value }}"
+                                            {% if item.status == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <button type="submit" class="approve-btn">
+                                    Update
+                                </button>
+                            </form>
+                        </td>
+
+                        <!-- DELETE REPORT: ADMIN ONLY PAGE -->
+                        <td>
+                            <form
+                                method="POST"
+                                action="{% url 'admin_delete_report' item.pk %}"
+                                onsubmit="return confirm('Are you sure you want to permanently delete the report &quot;{{ item.title|escapejs }}&quot;? This action cannot be undone.');"
+                            >
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="admin-delete-btn"
+                                >
+                                    Delete Report
+                                </button>
+                            </form>
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="8">
+                            No reports match your filters.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
 
     </div>
 
 </section>
+
+<style>
+    .admin-delete-btn {
+        display: inline-block;
+        padding: 9px 13px;
+        border: 1px solid #7f2938;
+        border-radius: 8px;
+        background: #35151c;
+        color: #ff9da8;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .admin-delete-btn:hover {
+        background: #57202b;
+        transform: translateY(-1px);
+    }
+
+    .admin-table-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .admin-reports-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-reports-table th,
+    .admin-reports-table td {
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle;
+    }
+
+    .admin-reports-table td form {
+        margin: 0;
+    }
+
+    .admin-reports-table td select {
+        max-width: 160px;
+    }
+</style>
 
 {% endblock %}

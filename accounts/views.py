@@ -1,61 +1,96 @@
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from .models import User
+from .models import User, EmailOTP
+from .otp_utils import create_and_send_otp, verify_otp
 
 
 @ensure_csrf_cookie
 def login_view(request):
-    # Redirect users who are already logged in.
     if request.user.is_authenticated:
-        if (
-            request.user.is_superuser
-            or getattr(request.user, 'role', '') == 'ADMIN'
-        ):
-            return redirect('admin_dashboard')
+        if request.user.is_superuser or request.user.role == "ADMIN":
+            return redirect("admin_dashboard")
+        if request.user.role == "TEACHER":
+            return redirect("teacher_dashboard")
+        return redirect("home")
 
-        elif getattr(request.user, 'role', '') == 'TEACHER':
-            return redirect('teacher_dashboard')
-
-        return redirect('home')
-
-    if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '')
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
 
         user = authenticate(
             request,
             username=username,
-            password=password
+            password=password,
         )
 
-        if user is not None:
-            login(request, user)
+        if user is None:
+            messages.error(request, "Invalid username or password.")
+            return render(request, "accounts/login.html")
 
-            # Custom CampusFind admin dashboard.
-            if (
-                user.is_superuser
-                or getattr(user, 'role', '') == 'ADMIN'
-            ):
-                return redirect('admin_dashboard')
+        if not user.email:
+            messages.error(
+                request,
+                "Your account needs an email address before you can log in."
+            )
+            return render(request, "accounts/login.html")
 
-            # Teacher dashboard.
-            elif getattr(user, 'role', '') == 'TEACHER':
-                return redirect('teacher_dashboard')
+        try:
+            challenge = create_and_send_otp(user, "LOGIN")
+        except Exception:
+            messages.error(
+                request,
+                "We couldn't send your verification code. "
+                "Please check the email configuration and try again."
+            )
+            return render(request, "accounts/login.html")
 
-            # Student homepage.
-            return redirect('home')
+        request.session["login_otp_token"] = str(challenge.token)
+        messages.success(request, "A verification code has been sent to your email.")
+        return redirect("verify_login_otp")
 
-        messages.error(
-            request,
-            'Invalid username or password.'
-        )
+    return render(request, "accounts/login.html")
 
-    return render(request, 'accounts/login.html')
 
+def verify_login_otp(request):
+    token = request.session.get("login_otp_token")
+
+    if not token:
+        messages.error(request, "Please log in to request a verification code.")
+        return redirect("login")
+
+    challenge = get_object_or_404(
+        EmailOTP,
+        token=token,
+        purpose="LOGIN",
+    )
+
+    if request.method == "POST":
+        code = request.POST.get("otp", "")
+        valid, error_message = verify_otp(challenge, code)
+
+        if not valid:
+            messages.error(request, error_message)
+            return render(request, "accounts/verify_otp.html")
+
+        user = challenge.user
+
+        # Remove the pending challenge before creating the session.
+        request.session.pop("login_otp_token", None)
+        login(request, user)
+
+        messages.success(request, "Email verified. You are now logged in.")
+
+        if user.is_superuser or user.role == "ADMIN":
+            return redirect("admin_dashboard")
+        if user.role == "TEACHER":
+            return redirect("teacher_dashboard")
+        return redirect("home")
+
+    return render(request, "accounts/verify_otp.html")
 
 def register_view(request):
     if request.user.is_authenticated:

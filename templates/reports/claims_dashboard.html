@@ -1,74 +1,305 @@
 
 {% extends "base.html" %}
 
-{% block content %}
-<div class="report-page">
-    <h1>Claim Review Dashboard</h1>
-    <p>Review student requests and record completed handovers.</p>
+{% block title %}Claim Review Dashboard | CampusFind{% endblock %}
 
+{% block content %}
+
+<div class="report-page claims-dashboard-page">
+
+    <!-- PAGE HEADER -->
+    <div class="claims-page-header">
+        <p class="claims-eyebrow">CAMPUSFIND · CLAIMS</p>
+        <h1>Claim Review Dashboard</h1>
+        <p class="claims-subtitle">
+            Review student requests and record completed handovers.
+        </p>
+    </div>
+
+    <!-- DJANGO MESSAGES -->
     {% if messages %}
-        {% for message in messages %}
-            <p class="report-message">{{ message }}</p>
-        {% endfor %}
+        <div class="claims-messages">
+            {% for message in messages %}
+                <p class="report-message {{ message.tags }}">
+                    {{ message }}
+                </p>
+            {% endfor %}
+        </div>
     {% endif %}
 
-    <form method="get">
-        <label for="status">Filter by status</label>
-        <select name="status" id="status">
-            <option value="">All claims</option>
-            {% for value, label in statuses %}
-                <option value="{{ value }}"
-                    {% if selected_status == value %}selected{% endif %}>
-                    {{ label }}
-                </option>
-            {% endfor %}
-        </select>
-        <button type="submit">Filter</button>
-        <a href="{% url 'claims_dashboard' %}">Clear</a>
+    <!-- FILTER FORM -->
+    <form method="get" class="claims-filter-form">
+        <div class="claims-filter-field">
+            <label for="status">Filter by status</label>
+
+            <select name="status" id="status">
+                <option value="">All claims</option>
+
+                {% for value, label in statuses %}
+                    <option value="{{ value }}"
+                        {% if selected_status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="claims-filter-button">
+            Filter
+        </button>
+
+        <a href="{% url 'claims_dashboard' %}" class="claims-clear-link">
+            Clear
+        </a>
     </form>
 
-    {% for claim in claims %}
-        <article class="my-report-card">
-            <div class="my-report-info">
-                <h2>{{ claim.item.title }}</h2>
+    <!-- CLAIM CARDS -->
+    <div class="claims-list">
 
-                <p><strong>Claimant:</strong> {{ claim.claimant.username }}</p>
-                <p><strong>Item reported by:</strong> {{ claim.item.owner.username }}</p>
-                <p><strong>Location:</strong> {{ claim.item.location }}</p>
-                <p><strong>Explanation:</strong> {{ claim.explanation }}</p>
-                <p><strong>Claim status:</strong> {{ claim.get_status_display }}</p>
+        {% for claim in claims %}
 
-                {% if claim.status == 'PENDING' %}
-                    <div class="review-actions">
-                        <form method="post" action="{% url 'review_claim' claim.id %}">
-                            {% csrf_token %}
-                            <button type="submit" name="action" value="approve">
-                                Approve Claim
-                            </button>
-                            <button type="submit" name="action" value="reject">
-                                Reject Claim
-                            </button>
-                        </form>
+            <article class="my-report-card claim-review-card">
+
+                <div class="my-report-info">
+
+                    <!-- CLAIM TITLE AND STATUS -->
+                    <div class="claim-card-heading">
+                        <h2>{{ claim.item.title }}</h2>
+
+                        <span class="claim-status status-{{ claim.status|lower }}">
+                            {{ claim.get_status_display }}
+                        </span>
                     </div>
-                {% elif claim.status == 'APPROVED' %}
-                    <p>
-                        <strong>Next step:</strong>
-                        Confirm the physical handover after the claimant's identity
-                        and ownership have been checked.
-                    </p>
-                    <form method="post"
-                          action="{% url 'confirm_item_return' claim.id %}"
-                          onsubmit="return confirm('Confirm that this item has actually been handed over?');">
-                        {% csrf_token %}
-                        <button type="submit">Confirm Item Returned</button>
-                    </form>
-                {% endif %}
-            </div>
-        </article>
-    {% empty %}
-        <p>No claims match this filter.</p>
-    {% endfor %}
 
-    <p><a href="{% url 'teacher_dashboard' %}">Back to teacher dashboard</a></p>
+                    <!-- CLAIM DETAILS -->
+                    <div class="claim-details">
+
+                        <p>
+                            <strong>Claimant:</strong>
+                            {{ claim.claimant.username }}
+                        </p>
+
+                        <p>
+                            <strong>Item reported by:</strong>
+                            {{ claim.item.owner.username }}
+                        </p>
+
+                        <p>
+                            <strong>Location:</strong>
+                            {{ claim.item.location }}
+                        </p>
+
+                        <p>
+                            <strong>Claim submitted:</strong>
+                            {{ claim.created_at|date:"d M Y, h:i A" }}
+                        </p>
+
+                        <p class="claim-explanation">
+                            <strong>Explanation:</strong>
+                            {{ claim.explanation }}
+                        </p>
+
+                    </div>
+
+                    <!-- PENDING CLAIM ACTIONS -->
+                    {% if claim.status == "PENDING" %}
+
+                        <div class="review-actions">
+
+                            <form method="post"
+                                  action="{% url 'review_claim' claim.id %}">
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    name="action"
+                                    value="approve"
+                                    class="claim-approve-button">
+                                    Approve Claim
+                                </button>
+
+                                <button
+                                    type="submit"
+                                    name="action"
+                                    value="reject"
+                                    class="claim-reject-button"
+                                    onclick="return confirm('Are you sure you want to reject this claim?');">
+                                    Reject Claim
+                                </button>
+
+                            </form>
+
+                        </div>
+
+                    <!-- APPROVED CLAIM: VERIFY HANDOVER -->
+                    {% elif claim.status == "APPROVED" %}
+
+                        <div class="claim-next-step">
+                            <strong>Next step: Verify claimant</strong>
+                            <p>
+                                Check the claimant's identity and ownership
+                                evidence. Ask the claimant to show their
+                                handover verification code before releasing
+                                the item.
+                            </p>
+                        </div>
+
+                        {% if claim.handover_verification %}
+
+                            {% if claim.handover_verification.is_used %}
+
+                                <!-- CODE ALREADY VERIFIED -->
+                                <div class="claim-handover-verified">
+                                    <p>
+                                        <strong>Claimant verified.</strong>
+                                    </p>
+
+                                    {% if claim.handover_verification.verified_by %}
+                                        <p>
+                                            <strong>Verified by:</strong>
+                                            {{ claim.handover_verification.verified_by.username }}
+                                        </p>
+                                    {% endif %}
+
+                                    {% if claim.handover_verification.verified_at %}
+                                        <p>
+                                            <strong>Verified at:</strong>
+                                            {{ claim.handover_verification.verified_at|date:"d M Y, h:i A" }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+
+                                <form method="post"
+                                      action="{% url 'confirm_item_return' claim.id %}"
+                                      onsubmit="return confirm('Confirm that this item has actually been handed over to the claimant?');">
+
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="claim-confirm-button">
+                                        Confirm Item Returned
+                                    </button>
+
+                                </form>
+
+                            {% else %}
+
+                                <!-- CODE NOT YET VERIFIED -->
+                                <div class="claim-handover-pending">
+                                    <p>
+                                        <strong>Handover verification required</strong>
+                                    </p>
+
+                                    <p>
+                                        Ask the claimant for their six-digit
+                                        code. Verify it before handing over
+                                        the item.
+                                    </p>
+
+                                    <p>
+                                        <strong>Code expires:</strong>
+                                        {{ claim.handover_verification.expires_at|date:"d M Y, h:i A" }}
+                                    </p>
+                                </div>
+
+                                <form
+                                    method="post"
+                                    action="{% url 'verify_handover' claim.id %}"
+                                    class="claim-verify-form">
+
+                                    {% csrf_token %}
+
+                                    <label for="handover-code-{{ claim.id }}">
+                                        Enter claimant's 6-digit code
+                                    </label>
+
+                                    <input
+                                        type="text"
+                                        id="handover-code-{{ claim.id }}"
+                                        name="code"
+                                        inputmode="numeric"
+                                        pattern="[0-9]{6}"
+                                        minlength="6"
+                                        maxlength="6"
+                                        autocomplete="off"
+                                        placeholder="e.g. 123456"
+                                        required>
+
+                                    <button
+                                        type="submit"
+                                        class="claim-approve-button">
+                                        Verify Code
+                                    </button>
+
+                                </form>
+
+                            {% endif %}
+
+                        {% else %}
+
+                            <div class="claim-handover-pending">
+                                <p>
+                                    The handover verification code is not
+                                    available for this claim.
+                                </p>
+                                <p>
+                                    Please contact the site administrator
+                                    before completing the handover.
+                                </p>
+                            </div>
+
+                        {% endif %}
+
+                    <!-- REJECTED CLAIM -->
+                    {% elif claim.status == "REJECTED" %}
+
+                        <div class="claim-handover-pending">
+                            <p>
+                                This claim has been rejected. No handover
+                                should take place for this request.
+                            </p>
+                        </div>
+
+                    <!-- RETURNED CLAIM -->
+                    {% elif claim.status == "RETURNED" %}
+
+                        <div class="claim-handover-verified">
+                            <p>
+                                <strong>Item returned successfully.</strong>
+                            </p>
+
+                            <p>
+                                This claim has been completed and the item
+                                handover has been recorded.
+                            </p>
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </article>
+
+        {% empty %}
+
+            <div class="claims-empty-state">
+                <h2>No claims found</h2>
+                <p>No claims match this filter.</p>
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+    <!-- BACK LINK -->
+    <div class="claims-back-link">
+        <a href="{% url 'teacher_dashboard' %}">
+            ← Back to teacher dashboard
+        </a>
+    </div>
+
 </div>
+
 {% endblock %}
