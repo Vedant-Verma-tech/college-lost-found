@@ -1,107 +1,61 @@
+
 {% extends 'base.html' %}
 
-
-{% block title %}
-
-Login — CampusFind
-
-{% endblock %}
-
+{% block title %}Login — CampusFind{% endblock %}
 
 {% block content %}
-
 <section class="auth-page">
-
     <div class="auth-card">
 
-        <div class="auth-logo">
+        <div class="auth-logo">✦ CampusFind</div>
 
-            ✦ CampusFind
-
-        </div>
-
-
-        <h1>
-            Welcome back.
-        </h1>
-
+        <h1>Welcome back.</h1>
 
         <p class="auth-subtitle">
-
-            Login to manage your campus
-            lost & found reports.
-
+            Login to manage your campus lost &amp; found reports.
         </p>
 
-
         {% if messages %}
-
             {% for message in messages %}
-
-                <div class="message">
-
+                <div class="message {{ message.tags }}">
                     {{ message }}
-
                 </div>
-
             {% endfor %}
-
         {% endif %}
 
-
         <form method="POST" action="{% url 'login' %}">
-
             {% csrf_token %}
 
-
-            <label>
-                Username
-            </label>
-
+            <label for="username">Username</label>
             <input
+                id="username"
                 type="text"
                 name="username"
                 placeholder="Enter username"
+                autocomplete="username"
                 required
             >
 
-
-            <label>
-                Password
-            </label>
-
+            <label for="password">Password</label>
             <input
+                id="password"
                 type="password"
                 name="password"
                 placeholder="Enter password"
+                autocomplete="current-password"
                 required
             >
 
-
-            <button
-                type="submit"
-                class="primary-btn auth-btn"
-            >
-
+            <button type="submit" class="primary-btn auth-btn">
                 Login →
-
             </button>
-
         </form>
 
-
         <p class="auth-footer">
-
             Don't have an account?
-
-            <a href="/register/">
-                Create account
-            </a>
-
+            <a href="{% url 'register' %}">Create account</a>
         </p>
 
     </div>
-
 </section>
-
 {% endblock %}

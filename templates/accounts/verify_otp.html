@@ -1,52 +1,83 @@
 
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}
-Verify Email — CampusFind
-{% endblock %}
+{% block title %}Verify Email | CampusFind{% endblock %}
 
 {% block content %}
 <section class="auth-page">
     <div class="auth-card">
+
         <div class="auth-logo">✦ CampusFind</div>
 
-        <h1>Verify your email</h1>
+        <h1>Verify your email.</h1>
 
-        <p class="auth-subtitle">
-            Enter the 6-digit verification code sent to your email.
-        </p>
+        {% if purpose == "claim" %}
+            <p class="auth-subtitle">
+                Enter the six-digit code sent to your registered email
+                to verify your claim for
+                <strong>{{ claim.item.title }}</strong>.
+            </p>
+
+        {% elif purpose == "register" %}
+            <p class="auth-subtitle">
+                Enter the six-digit code sent to
+                {% if email %}
+                    <strong>{{ email }}</strong>
+                {% else %}
+                    your email address
+                {% endif %}
+                to complete your registration.
+            </p>
+
+        {% else %}
+            <p class="auth-subtitle">
+                Enter the six-digit verification code sent to your email.
+            </p>
+        {% endif %}
 
         {% if messages %}
             {% for message in messages %}
-                <div class="message">{{ message }}</div>
+                <div class="message {{ message.tags }}">
+                    {{ message }}
+                </div>
             {% endfor %}
         {% endif %}
 
         <form method="POST">
             {% csrf_token %}
 
-            <label for="otp">Email verification code</label>
+            <label for="code">Six-digit verification code</label>
+
             <input
+                id="code"
+                name="code"
                 type="text"
-                id="otp"
-                name="otp"
-                placeholder="Enter 6-digit code"
                 inputmode="numeric"
+                autocomplete="one-time-code"
                 pattern="[0-9]{6}"
+                minlength="6"
                 maxlength="6"
+                placeholder="123456"
                 required
+                autofocus
             >
 
             <button type="submit" class="primary-btn auth-btn">
-                Verify &amp; Login →
+                Verify Code →
             </button>
         </form>
 
         <p class="auth-footer">
-            <a href="{% url 'login' %}">Back to login</a>
+            The code expires after 10 minutes and can only be used once.
         </p>
+
+        {% if purpose == "register" %}
+            <p class="auth-footer">
+                Already verified?
+                <a href="{% url 'login' %}">Sign in</a>
+            </p>
+        {% endif %}
+
     </div>
 </section>
 {% endblock %}
-
-

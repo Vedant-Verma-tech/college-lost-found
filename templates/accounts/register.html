@@ -1,159 +1,103 @@
+
 {% extends 'base.html' %}
 
-
-{% block title %}
-
-Create Account — CampusFind
-
-{% endblock %}
-
+{% block title %}Create Account — CampusFind{% endblock %}
 
 {% block content %}
-
 <section class="auth-page">
-
     <div class="auth-card register-card">
 
-        <div class="auth-logo">
+        <div class="auth-logo">✦ CampusFind</div>
 
-            ✦ CampusFind
-
-        </div>
-
-
-        <h1>
-            Join CampusFind.
-        </h1>
-
+        <h1>Join CampusFind.</h1>
 
         <p class="auth-subtitle">
-
-            Create your student account.
-
+            Create your student account. We'll email you a verification
+            code before activating it.
         </p>
 
-
         {% if messages %}
-
             {% for message in messages %}
-
-                <div class="message">
-
+                <div class="message {{ message.tags }}">
                     {{ message }}
-
                 </div>
-
             {% endfor %}
-
         {% endif %}
 
-
-        <form method="POST">
-
+        <form method="POST" action="{% url 'register' %}">
             {% csrf_token %}
 
-
-            <label>
-                Username
-            </label>
-
+            <label for="username">Username</label>
             <input
+                id="username"
                 type="text"
                 name="username"
+                autocomplete="username"
                 required
             >
 
-
-            <label>
-                College ID
-            </label>
-
+            <label for="college_id">College ID</label>
             <input
+                id="college_id"
                 type="text"
                 name="college_id"
                 placeholder="Example: CSE2026001"
                 required
             >
 
-
-            <label>
-                Email
-            </label>
-
+            <label for="email">Email</label>
             <input
+                id="email"
                 type="email"
                 name="email"
+                autocomplete="email"
                 required
             >
 
-
-            <label>
-                Department
-            </label>
-
+            <label for="department">Department</label>
             <input
+                id="department"
                 type="text"
                 name="department"
                 placeholder="Computer Science"
             >
 
-
-            <label>
-                Phone
-            </label>
-
+            <label for="phone">Phone</label>
             <input
+                id="phone"
                 type="tel"
                 name="phone"
+                autocomplete="tel"
             >
 
-
-            <label>
-                Password
-            </label>
-
+            <label for="password">Password</label>
             <input
+                id="password"
                 type="password"
                 name="password"
+                autocomplete="new-password"
                 required
             >
 
-
-            <label>
-                Confirm Password
-            </label>
-
+            <label for="confirm_password">Confirm Password</label>
             <input
+                id="confirm_password"
                 type="password"
                 name="confirm_password"
+                autocomplete="new-password"
                 required
             >
 
-
-            <button
-                type="submit"
-                class="primary-btn auth-btn"
-            >
-
+            <button type="submit" class="primary-btn auth-btn">
                 Create Account →
-
             </button>
-
         </form>
 
-
         <p class="auth-footer">
-
             Already have an account?
-
-            <a href="/login/">
-                Login
-            </a>
-
+            <a href="{% url 'login' %}">Sign in</a>
         </p>
 
     </div>
-
 </section>
-
 {% endblock %}
